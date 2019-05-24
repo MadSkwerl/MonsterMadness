@@ -8,7 +8,7 @@ import java.util.List;
 public class WOPVault
 {
     private static int next_uid = 1;
-    List<WOP> wopVault = new ArrayList<>();
+    private List<WOP> wopVault = new ArrayList<>();
 
     public WOPVault()
     {

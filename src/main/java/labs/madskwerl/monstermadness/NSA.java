@@ -64,7 +64,7 @@ public class NSA implements Listener
         String localizedName = (itemMeta != null) ? itemMeta.getLocalizedName() : "";
         if(localizedName.contains("WOP"))
         {
-            String uid = localizedName.substring(3); //strips "WOP_"
+            String uid = localizedName.substring(4); //strips "WOP_"
             WOP wop = wopVault.getWop(Integer.valueOf(uid));
             wop.applyPowers(e.getPlayer());
         }

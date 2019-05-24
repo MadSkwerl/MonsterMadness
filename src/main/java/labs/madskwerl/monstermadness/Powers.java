@@ -62,17 +62,17 @@ public class Powers
 
     static void apply(int powerID, int powerLevel, Player player)
     {
-        System.out.println("Power Applied");
+
         switch (powerID)
         {
             case 12:
+                System.out.println("Power Applied");
                 if (powerLevel < 0)
-                {
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 1000000, powerLevel * -1 * 25));
-                }
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 1000000, powerLevel * -1));
                 else if (powerLevel > 0)
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1000000, powerLevel * 25));
-            break;
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1000000, powerLevel));
+                break;
+            default:
         }
     }
 
@@ -94,7 +94,7 @@ public class Powers
     static void removePowers(Player player)
     {
         System.out.println("Powers Removed");
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 0, 0));
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 0, 0));
+        player.removePotionEffect(PotionEffectType.SPEED); //new PotionEffect(PotionEffectType.SPEED, 1, 0));
+        player.removePotionEffect(PotionEffectType.SLOW);//new PotionEffect(PotionEffectType.SLOW, 1, 0));
     }
 }
