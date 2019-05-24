@@ -19,10 +19,12 @@ import java.util.List;
 public class NSA implements Listener
 {
     List<Integer> bullets = new ArrayList<>();
+    private  WOPVault wopVault;
 
-    public NSA(JavaPlugin plugin)
+    public NSA(JavaPlugin plugin, WOPVault wopVault)
     {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        this.wopVault = wopVault;
     }
 
 
@@ -57,12 +59,16 @@ public class NSA implements Listener
     {
         System.out.println("Item Change Event Fired.");
         ItemStack itemStack = e.getPlayer().getInventory().getItem(e.getNewSlot());
-        System.out.println(itemStack.getItemMeta().getLocalizedName());
+        ItemMeta itemMeta = (itemStack != null) ? itemStack.getItemMeta(): null;
 
-            WOP wop = (WOP)itemStack;
+        String localizedName = (itemMeta != null) ? itemMeta.getLocalizedName() : "";
+        if(localizedName.contains("WOP"))
+        {
+            String uid = localizedName.substring(3); //strips "WOP_"
+            WOP wop = wopVault.getWop(Integer.valueOf(uid));
             wop.applyPowers(e.getPlayer());
-
-//        catch(Exception error){
-  //          Powers.removePowers(e.getPlayer());}
+        }
+        else
+            Powers.removePowers(e.getPlayer());
     }
 }

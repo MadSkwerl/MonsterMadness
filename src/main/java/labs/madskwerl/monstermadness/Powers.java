@@ -1,6 +1,7 @@
 package labs.madskwerl.monstermadness;
 
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -75,7 +76,7 @@ public class Powers
         }
     }
 
-    static void enchant(int powerID, int powerLevel, WOP wop )
+    static void enchant(int powerID, int powerLevel, ItemStack itemStack)
     {
         switch (powerID)
         {

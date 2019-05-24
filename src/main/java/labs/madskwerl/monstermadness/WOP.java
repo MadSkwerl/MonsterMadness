@@ -1,7 +1,5 @@
 package labs.madskwerl.monstermadness;
 
-
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -9,8 +7,9 @@ import org.bukkit.inventory.meta.ItemMeta;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class WOP  extends ItemStack
+public class WOP
 {
+    private int uid;
     private int powerID;
     private int powerLevel;
     private int powerSlots = 0;
@@ -49,37 +48,38 @@ public abstract class WOP  extends ItemStack
     private int splashLevel = 0;
     private int retentionLevel = 0;
 */
-    public WOP(int powerID, int powerLevel, Material material, int amount)
+    public WOP(ItemStack itemStack, int powerID, int powerLevel, int uid)
     {
-        super(material,amount);
+        this.uid = uid;
         this.powerID = powerID;
         this.powerLevel = powerLevel;
 
         //If power is power
         if(this.powerID == -1 && this.powerLevel > -1)
-            this.powerSlots  = this.baseSlots + this.powerLevel;
+        {
+            this.powerSlots = this.baseSlots + this.powerLevel;
+            this.updateLore(itemStack);
+        }
         else
-            this.modPower(this.powerID, this.powerLevel);
-        this.setDisplayName();
-        this.updateLore();
-
+            this.modPower(itemStack, this.powerID, this.powerLevel);
+        this.setDisplayName(itemStack);
         //note power will apply when main hand is switch to it
-        this.applyEnchantPowers();
+        this.applyEnchantPowers(itemStack);
     }
 
-    public void setDisplayName()
+    public void setDisplayName(ItemStack itemStack)
     {
-        ItemMeta itemMeta = this.getItemMeta();
+        ItemMeta itemMeta = itemStack.getItemMeta();
         if(itemMeta != null)
         {
-            itemMeta.setDisplayName(Powers.getPrefix(this.powerID, this.powerLevel) + this.getType().name() + Powers.getSuffix(this.powerID, this.powerLevel));
-            this.setItemMeta(itemMeta);
+            itemMeta.setDisplayName(Powers.getPrefix(this.powerID, this.powerLevel) + itemStack.getType().name() + Powers.getSuffix(this.powerID, this.powerLevel));
+            itemStack.setItemMeta(itemMeta);
         }
     }
 
-    public void updateLore()
+    public void updateLore(ItemStack itemStack)
     {
-        ItemMeta itemMeta = this.getItemMeta();
+        ItemMeta itemMeta = itemStack.getItemMeta();
         if(itemMeta != null)
         {
             List<String> loreList = new ArrayList<>();
@@ -94,11 +94,11 @@ public abstract class WOP  extends ItemStack
             }
             itemMeta.setLore(loreList);
         }
-        this.setItemMeta(itemMeta);
+        itemStack.setItemMeta(itemMeta);
     }
 
     //converts a wop to power weapon
-    public boolean makeSlotted(Player player)
+    public boolean makeSlotted(ItemStack itemStack, Player player)
     {
         if(this.powerID == -1 || this.powerLevel < 0)
             return false;
@@ -106,26 +106,26 @@ public abstract class WOP  extends ItemStack
         {
             //change powerID to power and update displayName
             this.powerID = 0;
-            this.setDisplayName();
+            this.setDisplayName(itemStack);
 
             //make powerSlots reduce all levels back to 0, apply powers to reset and update lore
             this.powerSlots = this.baseSlots + this.powerLevel;
             this.powerLevels = new int[this.powerLevels.length];
             this.applyPowers(player);
-            this.applyEnchantPowers();
-            this.updateLore();
+            this.applyEnchantPowers(itemStack);
+            this.updateLore(itemStack);
             return true;
         }
     }
 
-    public boolean addPowerUp(int powerID, Player player)
+    public boolean addPowerUp(ItemStack itemStack, int powerID, Player player)
     {
         if(this.activeSlotNumber + 1 > this.powerSlots)
             return false;
         else
         {
             activeSlotNumber ++;
-            this.modPower(powerID, Powers.getBaseMagnitude(powerID));
+            this.modPower(itemStack, powerID, Powers.getBaseMagnitude(powerID));
             this.applyPowers(player);
             return true;
         }
@@ -145,10 +145,10 @@ public abstract class WOP  extends ItemStack
     }
 
     //modifies power of weapon either by weapon properties or powerUps (if power weapon)
-    public void modPower(int powerID, int powerLevel)
+    public void modPower(ItemStack itemStack, int powerID, int powerLevel)
     {
         this.powerLevels[powerID] += powerLevel;
-        this.updateLore();
+        this.updateLore(itemStack);
     }
 
     //called on equip
@@ -158,9 +158,21 @@ public abstract class WOP  extends ItemStack
             Powers.apply(i, this.powerLevels[i], player);
     }
 
-    public void applyEnchantPowers()
+    public void applyEnchantPowers(ItemStack itemStack)
     {
         for(int i = 0; i < this.powerLevels.length; i++)
-            Powers.enchant(i, this.powerLevels[i], this);
+            Powers.enchant(i, this.powerLevels[i], itemStack);
+    }
+
+    public int getUID()
+    {
+        return this.uid;
+    }
+
+    public void link(ItemStack itemStack)
+    {
+        ItemMeta itemMeta = itemStack.getItemMeta();
+        itemMeta.setLocalizedName("WOP_" + this.uid);
+        itemStack.setItemMeta(itemMeta);
     }
 }
