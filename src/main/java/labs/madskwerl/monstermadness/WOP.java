@@ -154,6 +154,7 @@ public class WOP
     //called on equip
     public void applyPowers(Player player)
     {
+        Powers.removePowers(player);
         for(int i = 0; i < this.powerLevels.length; i++)
             Powers.apply(i, this.powerLevels[i], player);
     }

@@ -94,7 +94,7 @@ public class Powers
     static void removePowers(Player player)
     {
         System.out.println("Powers Removed");
-        player.removePotionEffect(PotionEffectType.SPEED); //new PotionEffect(PotionEffectType.SPEED, 1, 0));
-        player.removePotionEffect(PotionEffectType.SLOW);//new PotionEffect(PotionEffectType.SLOW, 1, 0));
+        player.removePotionEffect(PotionEffectType.SPEED);
+        player.removePotionEffect(PotionEffectType.SLOW);
     }
 }
