@@ -1,0 +1,11 @@
+name: MonsterMadness
+version: 1.0-SNAPSHOT
+main: labs.madskwerl.monstermadness.MonsterMadness
+api-version: 1.13
+authors: [madskwerl]
+description: Kill All Ze Monsters
+
+commands:
+  WOP:
+    description: Get a WOP
+    usage: /WOP

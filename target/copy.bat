@@ -1,0 +1,1 @@
+copy /Y monstermadness-1.0-SNAPSHOT.jar C:\Users\Admin\Downloads\BuildTools\Server\plugins
