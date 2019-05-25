@@ -2,6 +2,8 @@ package labs.madskwerl.monstermadness;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -42,16 +44,15 @@ public class Powers
 
     static int getID(String powerName)
     {
-        switch(powerName)
-        {
-
-            case "BROKEN":       //just wop with a neg level
-            case "POWER":       //wop staple
+        switch(powerName)                                                                                             //<-- x == implemented (or if nothing is there b/c i layz, ! == not implemented, $ = implemented and tested
+        {                                                                                                             //<-- "~" means partial implementation
+            case "BROKEN":       //just wop with a neg level                                                            <-- x
+            case "POWER":       //wop staple                                                                            <-- ~
                 return -1;
-            case "JAMMING":     //May misfire occasionally
-            case "INFINITY":    //can only be pos, infinite durability
+            case "JAMMING":     //May misfire occasionally  <-- Implementation wil be in the form of remove damage calc on hit (small percentage of the time) <-- ~
+            case "INFINITY":    //can only be pos, infinite durability                                                  <--x
                 return 0;
-            case "ROBBING":     //durability decreases with time
+            case "ROBBING":     //durability decreases with time <-- fire event to start reoccuring timer?
             case "AMMO REGEN":  //durability increases with time
                 return 1;
             case "CHARITY":     //gives life to enemy on hit (percentage most likely)
@@ -146,13 +147,11 @@ public class Powers
         switch(powerID)
         {
             case -1:
-                return "POWER";
+                return powerLevel > 0 ? "POWER" : "BROKEN";
+            case 0:
+                return powerLevel > 0 ? "INFINTE" : "JAMMING";
             case 12:
-                if(powerLevel < 0)
-                    return "SLOW";
-                else if(powerLevel > 0 )
-                    return "SPEED";
-                break;
+                return powerLevel > 0 ?  "SPEED" : "SLOW";
         }
         return "";
     }
@@ -161,6 +160,13 @@ public class Powers
     {
         switch(powerID)
         {
+
+            case -1:
+                return powerLevel > 0 ? "" : "BROKEN ";
+            case 0:
+                return powerLevel > 0 ? "INFINITE " : "";
+            case 12:
+                return powerLevel > 0 ? "CAFFEINATED " : "";
         }
         return "";
     }
@@ -170,12 +176,12 @@ public class Powers
 
             switch(powerID)
             {
+                case -1:
+                    return powerLevel > 0 ? "OF POWER" : "";
+                case 0:
+                    return powerLevel > 0 ? "" : " OF JAMMING";
                 case 12:
-                    if(powerLevel < 0)
-                        return " OF SLOW";
-                    else if(powerLevel > 0)
-                        return " OF SPEED";
-                    break;
+                    return powerLevel > 0 ? "" : " OF THE TURTLE";
             }
             return "";
     }
@@ -198,8 +204,23 @@ public class Powers
 
     static void enchant(int powerID, int powerLevel, ItemStack itemStack)
     {
+
+        ItemMeta itemMeta = itemStack.getItemMeta();
         switch (powerID)
         {
+            case 0:
+                if (powerLevel > 0)
+                {
+                    if (itemMeta instanceof Damageable)
+                    {
+                        ((Damageable) itemMeta).setDamage(0);
+                        itemMeta.setUnbreakable(true);
+                    }
+                }
+                else
+                    if(itemMeta != null){itemMeta.setUnbreakable(false);}
+                break;
+
         }
     }
     static int getBaseMagnitude(int powerID)
