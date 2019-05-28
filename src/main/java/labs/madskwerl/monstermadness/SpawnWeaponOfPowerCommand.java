@@ -19,13 +19,59 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(CommandSender sender, Command  command, String label, String[] args) {
         Player player;
+        int powerID = 9;
         if (sender instanceof Player)
         {
             player = (Player) sender;
+
+          /*  ItemStack itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,(int)(random.nextDouble() * 21) -10);
+            player.getInventory().addItem(itemStack);
+            */
             ItemStack itemStack = new ItemStack(Material.IRON_SWORD,1 );
-            wopVault.newWOP(itemStack, 12,(int)(random.nextDouble() * 21) - 10);
+            wopVault.newWOP(itemStack, powerID,-10);
+            player.getInventory().addItem(itemStack);
+
+            itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,-8);
+            player.getInventory().addItem(itemStack);
+
+             itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,-6);
+            player.getInventory().addItem(itemStack);
+
+            itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,-4);
+            player.getInventory().addItem(itemStack);
+
+            itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,-2);
+            player.getInventory().addItem(itemStack);
+
+            itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,0);
+            player.getInventory().addItem(itemStack);
+
+            itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,2);
+            player.getInventory().addItem(itemStack);
+
+            itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,4);
+            player.getInventory().addItem(itemStack);
+
+            itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,6);
+            player.getInventory().addItem(itemStack);
+
+            itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,8);
+            player.getInventory().addItem(itemStack);
+
+            itemStack = new ItemStack(Material.IRON_SWORD,1 );
+            wopVault.newWOP(itemStack, powerID,10);
             player.getInventory().addItem(itemStack);
         }
         else

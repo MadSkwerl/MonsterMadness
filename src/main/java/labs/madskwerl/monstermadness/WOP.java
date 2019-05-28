@@ -61,7 +61,12 @@ public class WOP
             this.updateLore(itemStack);
         }
         else
-            this.modPower(itemStack, this.powerID, this.powerLevel);
+        {
+            if(powerLevel > 0)
+                this.modPower(itemStack, this.powerID, (int)Math.ceil(this.powerLevel/2.0));
+            else
+                this.modPower(itemStack, this.powerID, this.powerLevel/2);
+        }
         this.setDisplayName(itemStack);
         //note power will apply when main hand is switch to it
         this.applyEnchantPowers(itemStack);
@@ -72,7 +77,7 @@ public class WOP
         ItemMeta itemMeta = itemStack.getItemMeta();
         if(itemMeta != null)
         {
-            itemMeta.setDisplayName(Powers.getPrefix(this.powerID, this.powerLevel) + itemStack.getType().name() + Powers.getSuffix(this.powerID, this.powerLevel));
+            itemMeta.setDisplayName(Powers.getPrefix(this.powerID, this.powerLevel) + itemStack.getType().name() + Powers.getSuffix(this.powerID, this.powerLevel) + " " + this.powerLevel);
             itemStack.setItemMeta(itemMeta);
         }
     }
@@ -168,6 +173,11 @@ public class WOP
     public int getUID()
     {
         return this.uid;
+    }
+
+    public int getPowerLevel(int powerID)
+    {
+        return this.powerLevels[powerID];
     }
 
     public void link(ItemStack itemStack)

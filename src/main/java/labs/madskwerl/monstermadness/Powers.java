@@ -9,6 +9,7 @@ import org.bukkit.potion.PotionEffectType;
 
 public class Powers
 {
+    final static int NumberOfPowers = 30;
     /*
    00 private int infiniteLevel = 0;
    01 private int ammoRegenLevel = 0;
@@ -42,99 +43,108 @@ public class Powers
    29 private int retentionLevel = 0;
 */
 
+    //key:  NA - Not Applicable
+    //      EW - Enchant WOP.  Effect applies directly to the wop. After this is done the effect will only work when the wop is used. Requires manual disenchant
+    //      OH - On Hit.       Effect is calculated using level On Hit. Only changing the level is required to obtain the effect
+    //      WH - WHen Hit      Effect is calculated using level when hit. " "
+    //      GT - Global Timer  Effect is applied via a timer that runs even when the wop is not equipped
+    //      ET - Equip Timer   Effect is applied via a timer that run ONLY when the wop is equipped
+    //      OU - On Use        Effect is applied when the wop is used.
+    //      OE - On Equip      Effect is applied when the wop is equipped. This usually requires modifying the players NBT tags
     static int getID(String powerName)
     {
+
         switch(powerName)                                                                                             //<-- x == implemented (or if nothing is there b/c i layz, ! == not implemented, $ = implemented and tested
         {                                                                                                             //<-- "~" means partial implementation
-            case "BROKEN":       //just wop with a neg level                                                            <-- x
-            case "POWER":       //wop staple                                                                            <-- ~
+            case "BROKEN":      //NA - just wop with a neg level                                                            <-- x
+            case "POWER":       //EW - WOP has slots                                                                            <-- ~
                 return -1;
-            case "JAMMING":     //May misfire occasionally  <-- Implementation wil be in the form of remove damage calc on hit (small percentage of the time) <-- ~
-            case "INFINITY":    //can only be pos, infinite durability                                                  <--x
+            case "JAMMING":     //OH - chance for damage to not apply on hit
+            case "INFINITY":    //EW - wop becomes unbreakable
                 return 0;
-            case "ROBBING":     //durability decreases with time <-- fire event to start reoccuring timer?
-            case "AMMO REGEN":  //durability increases with time
+            case "ROBBING":     //GT - durability decreases with time
+            case "AMMO REGEN":  //GT - durability increases with time
                 return 1;
-            case "CHARITY":     //gives life to enemy on hit (percentage most likely)
-            case "VAMP":        //takes life from enemy on hit (percentage?)
+            case "CHARITY":     //OH - gives life to enemy on hit (percentage most likely)
+            case "VAMP":        //OH - takes life from enemy on hit (percentage?)
                 return 2;
-            case "DYING":       //life drains over time
-            case "YOUTH":       //life regens over time
+            case "DYING":       //ET - life drains over time (uses player poison level)
+            case "YOUTH":       //ET - life regens over time
                 return 3;
-            case "FEEBLE":      //reduces damage dealt
-            case "DAMAGE":      //increases damage dealt
+            case "FEEBLE":      //OH - reduces damage dealt
+            case "DAMAGE":      //OH - increases damage dealt
                 return 4;
-            case "WEAKNESS":    //increases damage taken
-            case "PROTECTION":  //decreases damage taken
+            case "WEAKNESS":    //WH - increases damage taken
+            case "PROTECTION":  //WH - decreases damage taken
                 return 5;
-            case "TAINTED":     //chance to be poisoned on hit
-            case "TOXIC":       //poisons on hit
+            case "TAINTED":     //OU - chance to be poisoned for 5 seconds when firing
+            case "TOXIC":       //OH - poisons on hit
                 return 6;
-            case "DRUGGED":     //increases damage from being poisoned
-            case "ANTIDOTE":    //protects/reduces being poisoned
+            case "DRUGGED":     //WH - chance to be poisoned for 5 seconds when hit
+            case "ANTIDOTE":    //WH - protects/reduces being poisoned
                 return 7;
-            case "VOLATILE":    //chance to explode when using (damage dealt may be unhealable?)
-            case "BOOM":        //level 1 50% chance to cause small explosion, 2 100%, 3 larger explosion
+            case "VOLATILE":    //OU - chance to explode when using (damage dealt may be unhealable?)
+            case "BOOM":        //OH - level 1 50% chance to cause small explosion, 2 100%, 3 larger explosion
                 return 8;
-            case "CRUMBLE":     //explosions do more damage
-            case "BLAST PRUF":  //explosions do less damage. if possible they reduce the explosion knockback
+            case "CRUMBLE":     //WH - explosions do more damage to player
+            case "BLAST PRUF":  //WH - explosions do less damage. if possible they reduce the explosion knockback
                 return 9;
-            case "QUICKEN":     //speeds enemies movement on hit
-            case "TRIPPY":      //slows enemies movement on hit
+            case "QUICKEN":     //OH - speeds enemies movement on hit
+            case "TRIPPY":      //OH - slows enemies movement on hit
                 return 10;
-            case "SHACKLE":  //increases slowing of player
-            case "OIL":         //reduces slowing of the player
+            case "SHACKLE":     //WH - increases slowing of player
+            case "OIL":         //WH - reduces slowing of the player
                 return 11;
-            case "TURTLE":      //slows player movement speed
-            case "CAFFEINE":    //speeds player movement speed
+            case "TURTLE":      //OE - slows player movement speed
+            case "CAFFEINE":    //OE - speeds player movement speed
                 return 12;
-            case "COMBUSTIBLE":  //chance to catch fire when used
-            case "HEATED":       //chance to cause fire on hit
+            case "COMBUSTIBLE": //OU - chance to catch fire when used
+            case "HEATED":      //OH - chance to cause fire on hit
                 return 13;
-            case "DRY":         //increases fire damage taken
-            case "MOIST":       //decreases fire damage taken
+            case "DRY":         //WH  - increases fire damage taken
+            case "MOIST":       //WH  - decreases fire damage taken
                 return 14;
-            case "INSTAGIB":    //increases chance to insta kill
+            case "INSTAGIB":    //OH  - increases chance to insta kill
                 return 15;
-            case "INSTA PRUF":  //decreases insta kill damage 1 = 50% hp 2 = immune
+            case "INSTA PRUF":  //WH  - decreases insta kill damage 1 = 50% hp 2 = immune
                 return 16;
-            case "HALTING":     //chance to be stunned on hit
-            case "CONFOUNDING": //chance (smaller that other power ups) to stun on hit
+            case "HALTING":     //WH  - chance to be stunned when hit
+            case "CONFOUNDING": //OH  - chance (smaller that other power ups) to stun on hit
                 return 17;
-            case "DAZZELMENT":  //either increases time player is stunned or creates chance to randomly be stunned over time
-            case "UNLEASHED":   //level 0 = 100% stun chance lvl1 = 50% lvl2 = 0% (immune). only applies to mobs that hit with stunning
+            case "DAZZELMENT":  //WH  - increases time player is stunned
+            case "UNLEASHED":   //WH  - level 0 = 100% stun chance lvl1 = 50% lvl2 = 0% (immune). only applies to mobs that hit with stunning
                 return 18;
-            case "TIRING":      //Slows atk speed
-            case "FLURRY":      //speeds atk speed
+            case "TIRING":      //OE - Slows atk speed  (player generic atk speed nbt tag)
+            case "FLURRY":      //OE - speeds atk speed
                 return 19;
-            case "FATIGUE":     //increases the amount of atk speed reduction when taking dam from mob with atk spd reduction
-            case "ENERGY":      //decreases " ". lvl0=0% lvl1=50% lvl2 = immune
+            case "FATIGUE":     //WH  - increases the amount of atk speed reduction when taking dam from mob with atk spd reduction
+            case "ENERGY":      //WH  - decreases " ". lvl0=0% lvl1=50% lvl2 = immune
                 return 20;
-            case "SHORTY":     //decreases jumping distance (maybe speed a little
-            case "SPRING":     //increases jumping distance
+            case "SHORTY":      //OE  - decreases jumping distance (maybe speed a little) Note this may have to be done on jump event instead
+            case "SPRING":      //OE  - increases jumping distance
                 return 21;
-            case "AERODYNAMIC":  //increases fall damage
-            case "FEATHER":    //decreases fall damage
+            case "AERODYNAMIC": //WH - increases fall damage (when hit by fall damage)
+            case "FEATHER":     //WH - decreases fall damage
                 return 22;
-            case "ANGERING":   //chance to greatly increase speed, atk speed and take aggro of mob
-            case "CHARMING":   //chance to pacify mob
+            case "ANGERING":    //chance to greatly increase speed, atk speed and take aggro of mob
+            case "CHARMING":    //chance to pacify mob
                 return 23;
             case "NOISY":       //increases the chance to be detected by a mob
-            case "STEALTH":      //increases invisibility level
+            case "STEALTH":     //increases invisibility level
                 return 24;
-            case "UNSTABLE":     //increases the amount an enemy pushes the player on hit
-            case "PUSH":        //increases the amount an enemy is knocked back
+            case "UNSTABLE":    //WH - increases the amount an enemy pushes the player on hit
+            case "PUSH":        //OH - increases the amount an enemy is knocked back
                 return 25;
-            case "LEANING":    //increases the amount an enemy pushes the player on hit (yeah im lazy)
-            case "PULL":        //increases the amount an enemy is drawn in on hit. will cancel out push 1:1 = 0
+            case "LEANING":     //WH - increases the amount an enemy pulls the player on hit
+            case "PULL":        //OH - increases the amount an enemy is drawn in on hit. will cancel out push 1:1 = 0
                 return 26;
-            case "BALANCE":     //increases the amount of knock around from all sources and player experiences
-            case "STURDY":      //decreases the amount a player can be pushed or pulled on hit. decreases explosive knock back
+            case "BALANCE":     //WH - increases the amount of knock around from all sources and player experiences
+            case "STURDY":      //OH - decreases the amount a player can be pushed or pulled on hit. decreases explosive knock back
                 return 27;
-            case "FRAGILE":    //increases the amount on durability uses per hit
-            case "SPLASH":     //increases splash range on hit pos only
+            case "FRAGILE":    //OU - increases the amount on durability uses per hit
+            case "SPLASH":     //EW - increases splash range on hit pos only //possibly OH
                 return 28;
-            case "RETENTION": //lvl1 = weapon is saved it death & equipped. lvl2 weapon is always saved
+            case "RETENTION":  //OD - (on Death) lvl1 = weapon is saved it death & equipped. lvl2 weapon is always saved
             default:
                 return -2;
 
@@ -150,6 +160,14 @@ public class Powers
                 return powerLevel > 0 ? "POWER" : "BROKEN";
             case 0:
                 return powerLevel > 0 ? "INFINTE" : "JAMMING";
+            case 3:
+                return powerLevel > 0 ? "YOUTH" : "DYING";
+            case 4:
+                return powerLevel > 0 ? "DAMAGE" : "FEEBLE";
+            case 5:
+                return powerLevel > 0 ? "PROTECTION" : "WEAKNESS";
+            case 9:
+                return powerLevel > 0 ? "BOOM" : "VOLATILE";
             case 12:
                 return powerLevel > 0 ?  "SPEED" : "SLOW";
         }
@@ -165,6 +183,10 @@ public class Powers
                 return powerLevel > 0 ? "" : "BROKEN ";
             case 0:
                 return powerLevel > 0 ? "INFINITE " : "";
+            case 4:
+                return powerLevel > 0 ? "" : "FEEBLE ";
+            case 9:
+                return powerLevel > 0 ? "" : "VOLATILE ";
             case 12:
                 return powerLevel > 0 ? "CAFFEINATED " : "";
         }
@@ -180,6 +202,14 @@ public class Powers
                     return powerLevel > 0 ? "OF POWER" : "";
                 case 0:
                     return powerLevel > 0 ? "" : " OF JAMMING";
+                case 3:
+                    return powerLevel > 0 ? " OF YOUTH" : " OF DYING";
+                case 4:
+                    return powerLevel > 0 ? " OF DAMAGE" : "";
+                case 5:
+                    return powerLevel > 0 ? " OF PROTECTION" : " OF WEAKNESS";
+                case 9:
+                    return powerLevel > 0 ? " OF BOOM" : "";
                 case 12:
                     return powerLevel > 0 ? "" : " OF THE TURTLE";
             }
@@ -188,17 +218,29 @@ public class Powers
 
     static void apply(int powerID, int powerLevel, Player player)
     {
-
-        switch (powerID)
+        if(powerLevel !=0)
         {
-            case 12:
-                System.out.println("Power Applied");
-                if (powerLevel < 0)
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 1000000, powerLevel * -1));
-                else if (powerLevel > 0)
+            switch (powerID)
+            {
+                /*
+                case 3:
+                    if(powerLevel > 0)
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 1000000, powerLevel));
+                    else
+                        player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 1000000, powerLevel * -50));
+                    break;
+                */
+                case 4:
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 1000000, powerLevel));
+                    break;
+                case 5:
+                    player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 1000000, powerLevel));
+                    break;
+                case 12:
                     player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1000000, powerLevel));
-                break;
-            default:
+                    break;
+                default:
+            }
         }
     }
 
@@ -235,7 +277,9 @@ public class Powers
     static void removePowers(Player player)
     {
         System.out.println("Powers Removed");
+        player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
+        player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
         player.removePotionEffect(PotionEffectType.SPEED);
-        player.removePotionEffect(PotionEffectType.SLOW);
+
     }
 }
