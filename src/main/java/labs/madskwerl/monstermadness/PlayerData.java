@@ -6,17 +6,13 @@ public class PlayerData
     private String  uid;
     private int[]   currentPowerLevels = new int[Powers.NumberOfPowers];
 
-    int jammingLevel;
-    int duraRegenLevel;
-    int vampLvel;
+    int vampLevel;
     int lifeRegenLevel;         //Used by poison modifiers as well. ei poison = anti-regen
     int damageLevel;
     int defenseLevel;
     int poisonLevel;            //OnHit when pos, OnUse chance when neg
     int poisonDef;              //Chance to gain poison WhenHit when neg
     int poisonDefense;
-    int explodeChanceLevel;     //OnHit when pos, OnUse when Neg
-    int explodeDefenceLevel;    //Chance to explode WhenHit when neg
     int moveSpeedLevel;
     int moveSpeedDefenceLevel;
     int moveSpeedOnHitLevel;
@@ -40,6 +36,11 @@ public class PlayerData
     public PlayerData(String uid)
     {
         this.uid  = uid;
+    }
+
+    public String getUID()
+    {
+        return this.uid;
     }
 
     public void setPowerLevels(int[] powerLevels)

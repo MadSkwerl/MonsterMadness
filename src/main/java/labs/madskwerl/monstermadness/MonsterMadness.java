@@ -1,5 +1,4 @@
 package labs.madskwerl.monstermadness;
-
 import org.bukkit.plugin.java.JavaPlugin;
 
 

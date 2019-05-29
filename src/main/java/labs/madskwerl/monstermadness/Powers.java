@@ -59,8 +59,8 @@ public class Powers
             case "BROKEN":      //NA - just wop with a neg level                                                            <-- x
             case "POWER":       //EW - WOP has slots                                                                            <-- ~
                 return -1;
-            case "JAMMING":     //OH - chance for damage to not apply on hit
-            case "INFINITY":    //EW - wop becomes unbreakable
+            case "JAMMING":     //OU - chance for damage to not apply on hit     --implemented
+            case "INFINITY":    //EW - wop becomes unbreakable                  --implemented
                 return 0;
             case "ROBBING":     //GT - durability decreases with time
             case "AMMO REGEN":  //GT - durability increases with time
@@ -83,8 +83,8 @@ public class Powers
             case "DRUGGED":     //WH - chance to be poisoned for 5 seconds when hit
             case "ANTIDOTE":    //WH - protects/reduces being poisoned
                 return 7;
-            case "VOLATILE":    //OU - chance to explode when using (damage dealt may be unhealable?)
-            case "BOOM":        //OH - level 1 50% chance to cause small explosion, 2 100%, 3 larger explosion
+            case "VOLATILE":    //OU - chance to explode when using (damage dealt may be unhealable?)           --implemented
+            case "BOOM":        //OH - level 1 50% chance to cause small explosion, 2 100%, 3 larger explosion  --implemented
                 return 8;
             case "CRUMBLE":     //WH - explosions do more damage to player
             case "BLAST PRUF":  //WH - explosions do less damage. if possible they reduce the explosion knockback
@@ -166,7 +166,7 @@ public class Powers
                 return powerLevel > 0 ? "DAMAGE" : "FEEBLE";
             case 5:
                 return powerLevel > 0 ? "PROTECTION" : "WEAKNESS";
-            case 9:
+            case 8:
                 return powerLevel > 0 ? "BOOM" : "VOLATILE";
             case 12:
                 return powerLevel > 0 ?  "SPEED" : "SLOW";
@@ -185,7 +185,7 @@ public class Powers
                 return powerLevel > 0 ? "INFINITE " : "";
             case 4:
                 return powerLevel > 0 ? "" : "FEEBLE ";
-            case 9:
+            case 8:
                 return powerLevel > 0 ? "" : "VOLATILE ";
             case 12:
                 return powerLevel > 0 ? "CAFFEINATED " : "";
@@ -208,7 +208,7 @@ public class Powers
                     return powerLevel > 0 ? " OF DAMAGE" : "";
                 case 5:
                     return powerLevel > 0 ? " OF PROTECTION" : " OF WEAKNESS";
-                case 9:
+                case 8:
                     return powerLevel > 0 ? " OF BOOM" : "";
                 case 12:
                     return powerLevel > 0 ? "" : " OF THE TURTLE";
@@ -261,6 +261,7 @@ public class Powers
                 }
                 else
                     if(itemMeta != null){itemMeta.setUnbreakable(false);}
+                itemStack.setItemMeta(itemMeta);
                 break;
 
         }
@@ -277,9 +278,9 @@ public class Powers
     static void removePowers(Player player)
     {
         System.out.println("Powers Removed");
-        player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
-        player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-        player.removePotionEffect(PotionEffectType.SPEED);
+        //player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
+        //player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
+        //player.removePotionEffect(PotionEffectType.SPEED);
 
     }
 }
