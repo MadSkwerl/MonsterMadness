@@ -1,7 +1,6 @@
 package labs.madskwerl.monstermadness;
 
 
-import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -9,15 +8,14 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemDamageEvent;
-import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.*;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.util.Vector;
+
 import java.util.Random;
 
 public class NSA implements Listener
@@ -36,13 +34,23 @@ public class NSA implements Listener
             playerBank.addPlayer(player.getName());
     }
 
+    @EventHandler
+    public void onPlayerAnimationEvent(PlayerAnimationEvent e)
+    {
+        PlayerAnimationType playerAnimationType = e.getAnimationType();
+        //System.out.println(e.getPlayer() + " did a " + playerAnimationType);
+    }
 
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e)
     {
+        Player player = e.getPlayer();
+        Block block = e.getClickedBlock();
         Action action = e.getAction();
+        EquipmentSlot hand = e.getHand();
+        System.out.println(action + " with " + hand);
         // If the player right clicks
-        if (action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK))
+        if ((action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)) && hand != null && hand.equals(EquipmentSlot.HAND))
         {
             WOP weapon = null;
             ItemStack itemStack =  e.getPlayer().getInventory().getItemInMainHand();
@@ -58,57 +66,69 @@ public class NSA implements Listener
             //if currently held item was a wop
             if(weapon != null)
             {
-
-                Damageable damageable = (Damageable) itemMeta;
-                int fragilityLevel = weapon.getPowerLevel(28);
-                int damageAmount = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
-                int maxDamage = itemStack.getType().getMaxDurability();
-                int currentDamage = damageable.getDamage();
-                int newDamage = currentDamage + (5 + damageAmount * 5);
-
-                //Cancel if not enough durability
-                if(newDamage >= maxDamage)
+                long currentTime = System.currentTimeMillis();
+                PlayerData playerData = this.playerBank.getPlayer(player.getName());
+                if (playerData != null && (currentTime - playerData.interactTime) > 100)
                 {
-                    e.setCancelled(true);
-                    return;
-                }else//remove durability (ammo)
-                {
-                    damageable.setDamage(newDamage);
-                    itemStack.setItemMeta(itemMeta);
-                    //Handle Ammo Regen Power
-                    if(currentDamage > 1 && weapon.getPowerLevel(2) > 0) //powerID:2 = Ammo Regen
-                        new Regen_Ammo(this, itemStack).runTaskLater(this.plugin, 20);
-                }
 
-                //roll for power, will either be jamming or volatile, not both
-                int roll  = this.random.nextInt(5);
-                //Handle Jamming power
-                if(weapon.getPowerLevel(0) * -1 > roll)
-                {
-                    e.setCancelled(true);
-                    return;
-                }
+                    playerData.interactTime = currentTime;
+                    Damageable damageable = (Damageable) itemMeta;
+                    int fragilityLevel = weapon.getPowerLevel(28);
+                    int damageAmount = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
+                    int maxDamage = itemStack.getType().getMaxDurability();
+                    int currentDamage = damageable.getDamage();
+                    int newDamage = currentDamage + (5 + damageAmount * 5);
 
-                //Handle volatile power
-                Player player = e.getPlayer();
-                Block block = e.getClickedBlock();
-                Location location = null;
-                if(weapon.getPowerLevel(8) * -1 >  roll) //powerID:9 = explosion protection level. * -1 inverts the neg to pos
-                     location = player.getLocation(); //explode on player
-                else if(block != null && weapon.getPowerLevel(8) > roll)
-                    location = block.getLocation(); //explode where the player is looking
-                //note this only handle melee atm
-                if(location != null)
-                {
-                    player = e.getPlayer();
-                    Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
-                    fireball.setCustomName("WOP_" + player.getName()); //provides way to track entity
-                    fireball.setYield(2);
-                    fireball.setIsIncendiary(false);
-                    fireball.setVelocity(new Vector(0,-1000,0)); //sends straight down fast enough to explode immediately
+                    //Cancel if not enough durability
+                    if (newDamage >= maxDamage)
+                    {
+                        e.setCancelled(true);
+                        return;
+                    } else//remove durability (ammo)
+                    {
+                        System.out.println("Damage Now: " + newDamage);
+                        damageable.setDamage(newDamage);
+                        itemStack.setItemMeta(itemMeta);
+                        //Handle Ammo Regen Power
+                        if (currentDamage < 1 && weapon.getPowerLevel(2) > 0) //powerID:2 = Ammo Regen
+                        {
+                            new Regen_Ammo(this, itemStack).runTaskLater(this.plugin, 20);
+                            System.out.println("Regen Timer Started From On Use");
+                        }
+                    }
+                    //roll for power, will either be jamming or volatile, not both
+                    int roll = this.random.nextInt(5);
+                    //Handle Jamming power
+                    if (weapon.getPowerLevel(0) * -1 > roll)
+                    {
+                        e.setCancelled(true);
+                        return;
+                    }
+                    /*
+
+                    //Handle volatile/boom power
+                    Location location = null;
+                    if (weapon.getPowerLevel(8) * -1 > roll) //powerID:8 = volatile/boom. * -1 inverts the neg to pos
+                        location = player.getLocation(); //explode on player
+                    else if (block != null && weapon.getPowerLevel(8) > roll)
+                        location = block.getLocation(); //explode where the player is looking
+                    //note this only handle melee atm
+                    if (location != null)
+                    {
+                        player = e.getPlayer();
+                        Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
+                        fireball.setCustomName("WOP_" + player.getName()); //provides way to track entity
+                        fireball.setYield(2);
+                        fireball.setIsIncendiary(false);
+                        fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
+                    }
+
+                     */
                 }
             }
         }
+
+
     }
     @EventHandler
     public void onPlayerItemHeldEvent(PlayerItemHeldEvent e)
@@ -158,7 +178,7 @@ public class NSA implements Listener
             catch (Exception err){}
             System.out.println( weapon.getUID() + "was used to hit " + e.getEntity().toString() + " for " + e.getDamage());
         }
-        else if(damageCause == EntityDamageEvent.DamageCause.ENTITY_ATTACK) //retrievs wop from entity attack
+        else if(damageCause == EntityDamageEvent.DamageCause.ENTITY_ATTACK) //retrieves wop from entity attack
         {
             try
             {
@@ -180,7 +200,6 @@ public class NSA implements Listener
                 }
                 catch (Exception err){}
                 System.out.println( weapon.getUID() + "was used to hit " + e.getEntity().toString() + " for " + e.getDamage());
-
             }
         }
         else
@@ -215,15 +234,17 @@ public class NSA implements Listener
             int maxDamage = itemStack.getType().getMaxDurability();
             if(currentDamage > 0) //if wop is damaged
             {
-                int powerLevel = this.wopVault.getWop(Integer.valueOf(itemMeta.getLocalizedName())).getPowerLevel(2);
+                int powerLevel = this.wopVault.getWop(Integer.valueOf(itemMeta.getLocalizedName().substring(4))).getPowerLevel(2);
                 if (powerLevel > 0)
                 {
-                    int newDamage = currentDamage - powerLevel;
+                    int newDamage = currentDamage - (powerLevel * 5);
                     if(newDamage < 0)
                         newDamage = 0;
+                    System.out.println("Damage Now: " + newDamage);
                     damageable.setDamage(newDamage);
                     itemStack.setItemMeta(itemMeta);
                     new Regen_Ammo(this, itemStack).runTaskLater(this.plugin, 20);
+                    System.out.println("Regen Timer Started From Timer.");
                 }
             }
 

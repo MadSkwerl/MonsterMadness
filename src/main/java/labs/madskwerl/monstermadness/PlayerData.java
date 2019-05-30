@@ -5,6 +5,7 @@ public class PlayerData
 {
     private String  uid;
     private int[]   currentPowerLevels = new int[Powers.NumberOfPowers];
+    public  long interactTime = 0;
 
     int vampLevel;
     int lifeRegenLevel;         //Used by poison modifiers as well. ei poison = anti-regen

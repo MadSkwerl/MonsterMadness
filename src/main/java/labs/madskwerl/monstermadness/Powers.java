@@ -160,6 +160,8 @@ public class Powers
                 return powerLevel > 0 ? "POWER" : "BROKEN";
             case 0:
                 return powerLevel > 0 ? "INFINTE" : "JAMMING";
+            case 2:
+                return powerLevel > 0 ? "ROBBING" : "AMMO REGEN";
             case 3:
                 return powerLevel > 0 ? "YOUTH" : "DYING";
             case 4:
@@ -183,6 +185,8 @@ public class Powers
                 return powerLevel > 0 ? "" : "BROKEN ";
             case 0:
                 return powerLevel > 0 ? "INFINITE " : "";
+            case 2:
+                return powerLevel > 0 ? "" : "ROBBING ";
             case 4:
                 return powerLevel > 0 ? "" : "FEEBLE ";
             case 8:
@@ -199,9 +203,11 @@ public class Powers
             switch(powerID)
             {
                 case -1:
-                    return powerLevel > 0 ? "OF POWER" : "";
+                    return powerLevel > 0 ? " OF POWER" : "";
                 case 0:
                     return powerLevel > 0 ? "" : " OF JAMMING";
+                case 2:
+                    return powerLevel > 0 ? " OF REGEN" : "";
                 case 3:
                     return powerLevel > 0 ? " OF YOUTH" : " OF DYING";
                 case 4:
