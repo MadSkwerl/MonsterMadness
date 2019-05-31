@@ -1,7 +1,7 @@
 package labs.madskwerl.monstermadness;
 
-import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
@@ -9,181 +9,111 @@ import java.util.List;
 
 public class WOP
 {
-    private int uid;
-    private int powerID;
-    private int powerLevel;
-    private int powerSlots = 0;
-    private int activeSlotNumber = 0;
-    private final int baseSlots = 10;
-    private int[] powerLevels = new int[30];
-/*
-    private int infiniteLevel = 0;
-    private int ammoRegenLevel = 0;
-    private int lifeStealLevel = 0;
-    private int lifeRegenLevel = 0;
-    private int damageLevel = 0;
-    private int protectionLevel = 0;
-    private int poisonLevel = 0;
-    private int poisonProtectionLevel = 0;
-    private int explosiveLevel = 0;
-    private int explosiveProtectionLevel = 0;
-    private int slowLevel = 0;
-    private int slowProtectionLevel;
-    private int speedBoostLevel = 0;
-    private int fireChanceLevel = 0;
-    private int fireProtectionLevel = 0;
-    private int instagibChanceLevel = 0;
-    private int instagibProtectionLevel = 0;
-    private int stunChanceLevel = 0;
-    private int stunProtectionLevel = 0;
-    private int atkSpeedBoostLevel = 0;
-    private int atkSpeedProtectionLevel = 0;
-    private int jumpBoostLevel = 0;
-    private int fallProtectionLevel = 0;
-    private int charmChanceLevel = 0;
-    private int invisibilityLevel = 0;
-    private int knockBackLevel = 0;
-    private int drawInLevel = 0;
-    private int sturdyLevel = 0;
-    private int splashLevel = 0;
-    private int retentionLevel = 0;
-*/
-    public WOP(ItemStack itemStack, int powerID, int powerLevel, int uid)
+    public static void newWOP(ItemStack itemStack, int powerID, int powerLevel)
     {
-        this.uid = uid;
-        this.powerID = powerID;
-        this.powerLevel = powerLevel;
-
-        //If power is power
-        if(this.powerID == -1 && this.powerLevel > -1)
-        {
-            this.powerSlots = this.baseSlots + this.powerLevel;
-            this.updateLore(itemStack);
-        }
-        else
-        {
-            if(powerLevel > 0)
-                this.modPower(itemStack, this.powerID, (int)Math.ceil(this.powerLevel/2.0));
-            else
-                this.modPower(itemStack, this.powerID, this.powerLevel/2);
-        }
-        this.setDisplayName(itemStack);
-        //note power will apply when main hand is switch to it
-        this.applyEnchantPowers(itemStack);
+        WOP.setDisplayName(itemStack, powerID, powerLevel);
+        WOP.setPower(itemStack, powerID, powerLevel);
+        WOP.setLocalizedName(itemStack);
     }
 
-    public void setDisplayName(ItemStack itemStack)
+    public static boolean setDisplayName(ItemStack itemStack, int powerID, int powerLevel)
     {
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        if(itemMeta != null)
+        try
         {
-            itemMeta.setDisplayName(Powers.getPrefix(this.powerID, this.powerLevel) + itemStack.getType().name() + Powers.getSuffix(this.powerID, this.powerLevel) + " " + this.powerLevel);
+            ItemMeta itemMeta = itemStack.getItemMeta();
+
+            String materialName = itemStack.getType().toString();
+            materialName = materialName.replace("_", " ");
+            itemMeta.setDisplayName(Powers.getPrefix(powerID, powerLevel) + materialName + Powers.getSuffix(powerID, powerLevel) + " " + powerLevel);
             itemStack.setItemMeta(itemMeta);
-        }
+            return true;
+        }catch (Exception e){ return false; }
     }
 
-    public void updateLore(ItemStack itemStack)
+    public static boolean setLocalizedName(ItemStack itemStack)
+    {
+        try
+        {
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            itemMeta.setLocalizedName("WOP");
+            itemStack.setItemMeta(itemMeta);
+            return true;
+        }catch (Exception e){return false;}
+    }
+
+    public static boolean setPower(ItemStack itemStack, int powerID, int powerLevel)
     {
         ItemMeta itemMeta = itemStack.getItemMeta();
-        if(itemMeta != null)
+        try
         {
-            List<String> loreList = new ArrayList<>();
-            String lore;
-            for (int i = 0; i < this.powerLevels.length; i++)
+            List<String> loreList = itemMeta.getLore();
+            if(loreList == null)
+                loreList = new ArrayList<>();
+            String powerName = Powers.getName(powerID, powerLevel);
+            boolean loreSet = false;
+            for(int i = 0; i < loreList.size(); i++)
             {
-                if (this.powerLevels[i] != 0)
+                String lore = loreList.get(i);
+                if(lore.substring(lore.length() - 3).equals(powerName))
                 {
-                    lore = Powers.getName(i, this.powerLevels[i]) + " " + this.powerLevels[i];
-                    loreList.add(lore);
+                    loreList.set(i, powerName + String.format("%" + 3 + "s", powerLevel));
+                    loreSet = true;
+                    break;
                 }
             }
+
+            if(!loreSet)
+                loreList.add(powerName + String.format("%" + 3 + "s", powerLevel));
+
             itemMeta.setLore(loreList);
-        }
-        itemStack.setItemMeta(itemMeta);
-    }
-
-    //converts a wop to power weapon
-    public boolean makeSlotted(ItemStack itemStack, Player player)
-    {
-        if(this.powerID == -1 || this.powerLevel < 0)
-            return false;
-        else
-        {
-            //change powerID to power and update displayName
-            this.powerID = 0;
-            this.setDisplayName(itemStack);
-
-            //make powerSlots reduce all levels back to 0, apply powers to reset and update lore
-            this.powerSlots = this.baseSlots + this.powerLevel;
-            this.powerLevels = new int[this.powerLevels.length];
-            this.applyPowers(player);
-            this.applyEnchantPowers(itemStack);
-            this.updateLore(itemStack);
+            itemStack.setItemMeta(itemMeta);
             return true;
         }
-    }
-
-    public boolean addPowerUp(ItemStack itemStack, int powerID, Player player)
-    {
-        if(this.activeSlotNumber + 1 > this.powerSlots)
-            return false;
-        else
+        catch (Exception e)
         {
-            activeSlotNumber ++;
-            this.modPower(itemStack, powerID, Powers.getBaseMagnitude(powerID));
-            this.applyPowers(player);
-            return true;
+            return false;
         }
     }
 
-    public boolean removePowerUps(Player player)
+    public static int getPowerLevel(ItemStack itemStack, String powerName)
     {
-        if(this.activeSlotNumber == 0)
-            return false;
-        else
+        try
         {
-            //reset all
-            this.powerLevels = new int[this.powerLevels.length];
-            this.activeSlotNumber = 0;
-            return true;
-        }
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            List<String> loreList = itemMeta.getLore();
+            for (String lore : loreList)
+            {
+                if (lore.contains(powerName))
+                {
+                    String powerLevelStr = lore.substring(lore.length() - 3).trim();
+                    try
+                    {
+                        return Integer.valueOf(powerLevelStr);
+                    } catch (Exception e){ return 0; }
+                }
+            }
+        }catch(Exception e){}
+        return 0;
     }
 
-    //modifies power of weapon either by weapon properties or powerUps (if power weapon)
-    public void modPower(ItemStack itemStack, int powerID, int powerLevel)
+    public static String getPowerName(ItemStack itemStack, int slotNum)
     {
-        this.powerLevels[powerID] += powerLevel;
-        this.updateLore(itemStack);
+        try
+        {
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            List<String> loreList = itemMeta.getLore();
+            String lore = loreList.get(slotNum);
+            return lore.substring(0, lore.length() - 3).trim();
+        } catch (Exception e){return "";}
     }
 
-    //called on equip
-    public void applyPowers(Player player)
+    public static boolean isWOP(ItemStack itemStack)
     {
-        Powers.removePowers(player);
-        for(int i = 0; i < this.powerLevels.length; i++)
-            Powers.apply(i, this.powerLevels[i], player);
-    }
-
-    public void applyEnchantPowers(ItemStack itemStack)
-    {
-        for(int i = 0; i < this.powerLevels.length; i++)
-            Powers.enchant(i, this.powerLevels[i], itemStack);
-    }
-
-    public int getUID()
-    {
-        return this.uid;
-    }
-
-    public int getPowerLevel(int powerID)
-    {
-        return this.powerLevels[powerID];
-    }
-
-    public void link(ItemStack itemStack)
-    {
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        itemMeta.setLocalizedName("WOP_" + this.uid);
-        itemStack.setItemMeta(itemMeta);
+        try
+        {
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            String localizedName = itemMeta.getLocalizedName();
+            return localizedName.contains("WOP");
+        }catch (Exception e){return false;}
     }
 }

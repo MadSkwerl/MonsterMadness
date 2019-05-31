@@ -9,11 +9,10 @@ public final class MonsterMadness extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
-        WOPVault wopVault = new WOPVault();
         PlayerBank playerBank = new PlayerBank();
-        NSA nsa  = new NSA(this, wopVault, playerBank);
+        NSA nsa  = new NSA(this, playerBank);
         //register commands
-        this.getCommand("WOP").setExecutor(new SpawnWeaponOfPowerCommand(wopVault));
+        this.getCommand("WOP").setExecutor(new SpawnWeaponOfPowerCommand());
         //populate PlayerBank & WOPVault
         for (Player player : this.getServer().getOnlinePlayers())
         {

@@ -23,15 +23,13 @@ import java.util.Random;
 public class NSA implements Listener
 {
     private JavaPlugin plugin;
-    private WOPVault wopVault;
     private Random random = new Random();
     private PlayerBank playerBank;
 
-    public NSA(JavaPlugin plugin, WOPVault wopVault, PlayerBank playerBank)
+    public NSA(JavaPlugin plugin,  PlayerBank playerBank)
     {
         this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        this.wopVault = wopVault;
         this.playerBank = playerBank;
 
     }
@@ -54,28 +52,21 @@ public class NSA implements Listener
         // If the player right clicks
         if ((action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)) && hand != null && hand.equals(EquipmentSlot.HAND))
         {
-            WOP weapon = null;
             ItemStack itemStack =  e.getPlayer().getInventory().getItemInMainHand();
+            if(!WOP.isWOP(itemStack))
+                return;
+
             ItemMeta itemMeta = itemStack.getItemMeta();
-
-            //get wop from currently held ItemStack
-            try
-            {
-                String localizedName  = itemMeta.getLocalizedName();
-                weapon  = wopVault.getWop(Integer.valueOf(localizedName.substring(4)));
-            }catch (Exception err){}
-
-            //if currently held item was a wop
-            if(weapon != null)
+            try //to handle null pointer exceptions
             {
                 long currentTime = System.currentTimeMillis();
                 PlayerData playerData = this.playerBank.getPlayer(player.getName());
-                if (playerData != null && (currentTime - playerData.lastAttackTime) > playerData.attackDelay && (currentTime - playerData.lastWOPRegenTime) > 100)
+                if ((currentTime - playerData.lastAttackTime) > playerData.attackDelay && (currentTime - playerData.lastWOPRegenTime) > 100)
                 {
 
                     playerData.lastAttackTime = currentTime;
                     Damageable damageable = (Damageable) itemMeta;
-                    int fragilityLevel = weapon.getPowerLevel(28);
+                    int fragilityLevel = WOP.getPowerLevel(itemStack, "FRAGILE");
                     int damageAmount = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
                     int maxDamage = itemStack.getType().getMaxDurability();
                     int currentDamage = damageable.getDamage();
@@ -99,7 +90,7 @@ public class NSA implements Listener
                     //roll for power, will either be jamming or volatile, not both
                     int roll = this.random.nextInt(5);
                     //Handle Jamming power
-                    if (weapon.getPowerLevel(0) * -1 > roll)
+                    if (WOP.getPowerLevel(itemStack, "JAMMING") * -1 > roll)
                     {
                         e.setCancelled(true);
                         return;
@@ -108,9 +99,9 @@ public class NSA implements Listener
 
                     //Handle volatile/boom power
                     Location location = null;
-                    if (weapon.getPowerLevel(8) * -1 > roll) //powerID:8 = volatile/boom. * -1 inverts the neg to pos
+                    if (WOP.getPowerLevel(itemStack, "VOLATILE") * -1 > roll) //powerID:8 = volatile/boom. * -1 inverts the neg to pos
                         location = player.getLocation(); //explode on player
-                    else if (block != null && weapon.getPowerLevel(8) > roll)
+                    else if (WOP.getPowerLevel(itemStack, "BOOM") > roll)
                         location = block.getLocation(); //explode where the player is looking
                     //note this only handle melee atm
                     if (location != null)
@@ -123,24 +114,12 @@ public class NSA implements Listener
                         fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
                     }
                 }
-            }
+            }catch(Exception err){}
         }
     }
     @EventHandler
     public void onPlayerItemHeldEvent(PlayerItemHeldEvent e)
-    {   //applies powers when switching wop. was used with potionEffects(not being used anymore), may be removed or modified shortly
-        ItemStack itemStack = e.getPlayer().getInventory().getItem(e.getNewSlot());
-        ItemMeta itemMeta = (itemStack != null) ? itemStack.getItemMeta(): null;
-
-        String localizedName = (itemMeta != null) ? itemMeta.getLocalizedName() : "";
-        if(localizedName.contains("WOP"))
-        {
-            String uid = localizedName.substring(4); //strips "WOP_"
-            WOP wop = wopVault.getWop(Integer.valueOf(uid));
-            wop.applyPowers(e.getPlayer());
-        }
-        else
-            Powers.removePowers(e.getPlayer());
+    {
     }
 
     @EventHandler
@@ -160,7 +139,7 @@ public class NSA implements Listener
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
     {
-        WOP weapon = null;
+        /*
         EntityDamageEvent.DamageCause damageCause = e.getCause();
         if(damageCause == EntityDamageEvent.DamageCause.PROJECTILE) //retrieves wop from projectile
         {
@@ -202,6 +181,7 @@ public class NSA implements Listener
         {
             System.out.println( e.getDamager() + " hit " + e.getEntity().toString() + " with " + e.getCause() + " for " + e.getDamage());
         }
+        */
 
     }
 
@@ -213,7 +193,7 @@ public class NSA implements Listener
         {
             if (e.getItem().getItemMeta().getLocalizedName().contains("WOP"))
             {
-                System.out.println("Item Dam Canceled");
+                System.out.println("Item Damage Canceled");
                 e.setCancelled(true);
             }
         }catch (Exception err){}
@@ -226,22 +206,25 @@ public class NSA implements Listener
         Damageable damageable = (Damageable) itemMeta;
         if (itemMeta != null)// && itemStack.getAmount() > 0)
         {
+            int powerLevel = WOP.getPowerLevel(itemStack, "AMMO REGEN");
+            if(powerLevel == 0)
+                powerLevel = WOP.getPowerLevel(itemStack, "ROBBING");
+            int maxDamage = itemStack.getType().getMaxDurability();
             int currentDamage = damageable.getDamage();
-            if(currentDamage > 0 && itemStack.getAmount() > 0) //if wop is damaged and it exists
+            if(itemStack.getAmount() > 0 && ((powerLevel > 0 && currentDamage > 0)  || (powerLevel < 0 && powerLevel < maxDamage))) //if itemStack exits, isDamaged(for regen), isNotFullyDamaged
             {
-                int powerLevel = this.wopVault.getWop(Integer.valueOf(itemMeta.getLocalizedName().substring(4))).getPowerLevel(2);
-                if (powerLevel > 0)
-                {
                     int newDamage = currentDamage - (powerLevel);
                     if(newDamage < 0)
                         newDamage = 0;
+                    if(newDamage > itemStack.getType().getMaxDurability())
+
                     playerData.lastWOPRegenTime = System.currentTimeMillis();
-                    System.out.println("Damage Now: " + newDamage);
                     damageable.setDamage(newDamage);
                     itemStack.setItemMeta(itemMeta);
                     new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
+
+                    System.out.println("Damage Now: " + newDamage);
                     System.out.println("Regen Timer Started From Timer.");
-                }
             }
 
         }
