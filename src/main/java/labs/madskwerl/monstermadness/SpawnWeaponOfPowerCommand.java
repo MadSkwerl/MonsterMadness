@@ -23,7 +23,7 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor {
     @Override
     public boolean onCommand(CommandSender sender, Command  command, String label, String[] args) {
         Player player;
-        int powerID = 8;
+        int powerID = 2;
         if (sender instanceof Player)
         {
 
