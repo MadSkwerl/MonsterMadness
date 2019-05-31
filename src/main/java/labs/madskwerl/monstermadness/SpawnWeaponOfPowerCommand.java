@@ -4,16 +4,15 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
-
 import java.util.Arrays;
 import java.util.Random;
 
+
 public class SpawnWeaponOfPowerCommand implements CommandExecutor
 {
+    public enum WOP_SYNTAX {WOP, REMOVE}
     private Random random = new Random();
 
     @Override
@@ -31,7 +30,7 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
             //====================================Start Block: No Args==========================================
             if (args.length == 0)
             {
-                this.outputSyntax();
+                this.outputSyntax(WOP_SYNTAX.WOP, player);
             }//=======================================End Block: No Args=========================================
             else if (args[0].matches("-?\\d+"))
             {
@@ -56,7 +55,7 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
                             player.getInventory().addItem(itemStack);
                         }
                         else
-                            this.outputSyntax();
+                            this.outputSyntax(WOP_SYNTAX.WOP, player);
                     }
                 }catch (Exception e){return false;}
             }
@@ -65,26 +64,22 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
             {
                 try
                 {
-                    if (args.length > 1)
-                    {
-                        if (args[1].toLowerCase().equals("h") || args[1].toLowerCase().equals("hand"))
-                        {
-                            ItemStack item = player.getInventory().getItemInMainHand();
+                    if (args.length == 2 && (args[1].toLowerCase().equals("h") || args[1].toLowerCase().equals("hand")))
+                    {       ItemStack item = player.getInventory().getItemInMainHand();
                             if (WOP.isWOP(item)) //Remove item in hand/cursor if it is a WOP
                                 item.setAmount(0);
+                    }else if (args.length == 1) //Remove all weapons of power in player's inventory
+                    {   for (ItemStack item : player.getInventory().getContents())
+                        {   if (WOP.isWOP(item))
+                            item.setAmount(0);
                         }
-                    } else //Remove all weapons of power in player's inventory
-                    {
-                        for (ItemStack item : player.getInventory().getContents())
-                        {
-                            if (WOP.isWOP(item))
-                                item.setAmount(0);
-                        }
+                    }else
+                    {   this.outputSyntax(WOP_SYNTAX.REMOVE, player);
+                        //return false;
                     }
                     player.updateInventory();
-                } catch (Exception e)
-                {
-                    System.out.println("Error occurred with /wop remove command");
+                }catch (Exception e)
+                {   this.outputSyntax(WOP_SYNTAX.REMOVE, player);
                 }
                 //=====================================End Block: Remove============================================
             } else
@@ -93,8 +88,22 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
         return true;
     }
 
-    private void outputSyntax()
+    private void outputSyntax(WOP_SYNTAX syntax, Player player)
     {
-        System.out.println("/wop power_id power_level");
+        switch(syntax)
+        {
+            case WOP:
+                player.sendMessage("Usage: /wop <power_id> <power_level>");
+                break;
+            case REMOVE:
+                player.sendMessage("Usage:\n/wop remove [hand]\n/wop rm [h]");
+                break;
+            default:
+                player.sendMessage("Usage: /wop [options]" +
+                        "\n<power_id> <power_level>" +
+                        "\nremove [hand]");
+                break;
+        }
+
     }
 }
