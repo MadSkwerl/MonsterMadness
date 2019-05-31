@@ -9,6 +9,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -32,13 +33,6 @@ public class NSA implements Listener
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         this.playerBank = playerBank;
 
-    }
-
-    @EventHandler
-    public void onPlayerAnimationEvent(PlayerAnimationEvent e)
-    {
-        PlayerAnimationType playerAnimationType = e.getAnimationType();
-        //System.out.println(e.getPlayer() + " did a " + playerAnimationType);
     }
 
     @EventHandler
@@ -117,9 +111,40 @@ public class NSA implements Listener
             }catch(Exception err){}
         }
     }
+
+    @EventHandler
+    public void onEntityPickupItemEvent(EntityPickupItemEvent e)
+    {
+        try
+        {
+            Player player = (Player) e.getEntity();
+            PlayerData playerData = this.playerBank.getPlayer(player.getName());
+            ItemStack itemStack = e.getItem().getItemStack();
+            if(WOP.isWOP(itemStack))
+            {
+                if(WOP.getPowerLevel(itemStack, "AMMO REGEN") > 0 || WOP.getPowerLevel(itemStack, "AMMO REGEN") < 0)
+                    new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
+                else if(WOP.getPowerLevel(itemStack, "YOUTH") > 0 || WOP.getPowerLevel(itemStack, "DYING") < 0 && !playerData.isRegenHealth)
+                    new Regen_Health(this, player).runTaskLater(this.plugin, 20);
+            }
+
+        }catch(Exception err){}
+    }
+
+
     @EventHandler
     public void onPlayerItemHeldEvent(PlayerItemHeldEvent e)
     {
+        try
+        {
+            PlayerData playerData = this.playerBank.getPlayer(e.getPlayer().getName());
+            ItemStack itemStack = e.getPlayer().getInventory().getItem(e.getNewSlot());
+            int youthLevel = WOP.getPowerLevel(itemStack, "YOUTH");
+            int dyingLevel = WOP.getPowerLevel(itemStack, "DYING");
+            if (playerData != null && !playerData.isRegenHealth && (youthLevel > 0 || dyingLevel < 0))
+                new Regen_Health(this, e.getPlayer()).runTaskLater(this.plugin, 20);
+        }
+        catch(Exception err){}
     }
 
     @EventHandler
@@ -211,12 +236,14 @@ public class NSA implements Listener
                 powerLevel = WOP.getPowerLevel(itemStack, "ROBBING");
             int maxDamage = itemStack.getType().getMaxDurability();
             int currentDamage = damageable.getDamage();
-            if(itemStack.getAmount() > 0 && ((powerLevel > 0 && currentDamage > 0)  || (powerLevel < 0 && powerLevel < maxDamage))) //if itemStack exits, isDamaged(for regen), isNotFullyDamaged
+            if(itemStack.getAmount() > 0 && ((powerLevel > 0 && currentDamage > 0)  || (powerLevel < 0 && currentDamage < maxDamage-1))) //if itemStack exits, isDamaged(for regen), isNotFullyDamaged
             {
-                    int newDamage = currentDamage - (powerLevel);
+                    int newDamage = currentDamage - (powerLevel) * 2;
                     if(newDamage < 0)
                         newDamage = 0;
-                    if(newDamage > itemStack.getType().getMaxDurability())
+                    if(newDamage > maxDamage - 1)
+                        newDamage = maxDamage -1;
+
 
                     playerData.lastWOPRegenTime = System.currentTimeMillis();
                     damageable.setDamage(newDamage);
@@ -229,4 +256,44 @@ public class NSA implements Listener
 
         }
     }
+
+    public void regenHealth(Player player)
+    {
+        PlayerData playerData = playerBank.getPlayer(player.getName());
+        if(playerData != null)
+        {
+            try
+            {
+                ItemStack itemStack = player.getInventory().getItemInMainHand();
+                double maxHP = playerData.maxHP;
+                double currentHP = player.getHealth();
+                int youthLevel = WOP.getPowerLevel(itemStack, "YOUTH");
+                if (itemStack.getAmount() > 0 && youthLevel > 0 && currentHP != maxHP)
+                {
+                    double newHP = currentHP + youthLevel;
+                    if (newHP > maxHP)
+                        newHP = maxHP;
+                    player.setHealth(newHP);
+                    new Regen_Health(this, player).runTaskLater(this.plugin, 20);
+                } else
+                {
+                    int dyingLevel = WOP.getPowerLevel(itemStack, "DYING");
+                    if (itemStack.getAmount() > 0 && dyingLevel < 0 && currentHP > 0.5)
+                    {
+                        double newHP = currentHP + dyingLevel;
+                        if (newHP < 0.5)
+                            newHP = 0.5;
+                        player.setHealth(newHP);
+                        new Regen_Health(this, player).runTaskLater(this.plugin, 20);
+                    } else
+                        playerData.isRegenHealth = false;
+                }
+            } catch (Exception e)
+            {
+                playerData.isRegenHealth = false;
+            }
+        }
+    }
+
+
 }

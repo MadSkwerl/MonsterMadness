@@ -8,6 +8,9 @@ public class PlayerData
     public  int attackDelay = 100;
     public long lastAttackTime = 0;
     public long lastWOPRegenTime = 0;
+    public double maxHP = 20;
+    public boolean isRegenHealth = false;
+
 
     int vampLevel;
     int lifeRegenLevel;         //Used by poison modifiers as well. ei poison = anti-regen

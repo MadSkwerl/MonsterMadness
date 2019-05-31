@@ -160,8 +160,8 @@ public class Powers
                 return powerLevel > 0 ? "POWER" : "BROKEN";
             case 0:
                 return powerLevel > 0 ? "INFINTE" : "JAMMING";
-            case 2:
-                return powerLevel > 0 ? "ROBBING" : "AMMO REGEN";
+            case 1:
+                return powerLevel > 0 ? "AMMO REGEN" : "ROBBING";
             case 3:
                 return powerLevel > 0 ? "YOUTH" : "DYING";
             case 4:
@@ -185,7 +185,7 @@ public class Powers
                 return powerLevel > 0 ? "" : "BROKEN ";
             case 0:
                 return powerLevel > 0 ? "INFINITE " : "";
-            case 2:
+            case 1:
                 return powerLevel > 0 ? "" : "ROBBING ";
             case 4:
                 return powerLevel > 0 ? "" : "FEEBLE ";
@@ -206,7 +206,7 @@ public class Powers
                     return powerLevel > 0 ? " OF POWER" : "";
                 case 0:
                     return powerLevel > 0 ? "" : " OF JAMMING";
-                case 2:
+                case 1:
                     return powerLevel > 0 ? " OF REGEN" : "";
                 case 3:
                     return powerLevel > 0 ? " OF YOUTH" : " OF DYING";
@@ -220,34 +220,6 @@ public class Powers
                     return powerLevel > 0 ? "" : " OF THE TURTLE";
             }
             return "";
-    }
-
-    static void apply(int powerID, int powerLevel, Player player)
-    {
-        if(powerLevel !=0)
-        {
-            switch (powerID)
-            {
-                /*
-                case 3:
-                    if(powerLevel > 0)
-                        player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 1000000, powerLevel));
-                    else
-                        player.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 1000000, powerLevel * -50));
-                    break;
-                */
-                case 4:
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 1000000, powerLevel));
-                    break;
-                case 5:
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 1000000, powerLevel));
-                    break;
-                case 12:
-                    player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 1000000, powerLevel));
-                    break;
-                default:
-            }
-        }
     }
 
     static void enchant(int powerID, int powerLevel, ItemStack itemStack)
@@ -272,6 +244,7 @@ public class Powers
 
         }
     }
+
     static int getBaseMagnitude(int powerID)
     {
         switch(powerID)
@@ -281,12 +254,4 @@ public class Powers
         }
     }
 
-    static void removePowers(Player player)
-    {
-        System.out.println("Powers Removed");
-        //player.removePotionEffect(PotionEffectType.INCREASE_DAMAGE);
-        //player.removePotionEffect(PotionEffectType.DAMAGE_RESISTANCE);
-        //player.removePotionEffect(PotionEffectType.SPEED);
-
-    }
 }
