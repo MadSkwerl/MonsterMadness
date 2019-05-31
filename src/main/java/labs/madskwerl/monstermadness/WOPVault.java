@@ -33,4 +33,14 @@ public class WOPVault
         }
         return null;
     }
+
+    public boolean removeWOP(int wop_uid)
+    {
+        if (wopVault.contains(getWop(wop_uid)))
+        {
+            wopVault.remove(getWop(wop_uid));
+            return true;
+        }
+        return false;
+    }
 }

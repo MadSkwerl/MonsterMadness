@@ -100,6 +100,7 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor {
                             item.getItemMeta().getLocalizedName().toLowerCase().contains("wop")) //Remove item in hand/cursor if it is a WOP
                         {
                             item.setAmount(0);
+                            wopVault.removeWOP(Integer.valueOf(item.getItemMeta().getLocalizedName().substring(4)));
                         }
                     }
                 }else //Remove all weapons of power in player's inventory
@@ -111,6 +112,7 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor {
                             item.getItemMeta().getLocalizedName().toLowerCase().contains("wop"))
                         {
                             item.setAmount(0);
+                            wopVault.removeWOP(Integer.valueOf(item.getItemMeta().getLocalizedName().substring(4)));
                         }
                     }
                 }
