@@ -224,11 +224,11 @@ public class NSA implements Listener
     {
         ItemMeta itemMeta = itemStack.getItemMeta();
         Damageable damageable = (Damageable) itemMeta;
-        if (itemMeta != null)
+        if (itemMeta != null)// && itemStack.getAmount() > 0)
         {
             int currentDamage = damageable.getDamage();
             int maxDamage = itemStack.getType().getMaxDurability();
-            if(currentDamage > 0) //if wop is damaged
+            if(currentDamage > 0 && itemStack.getAmount() > 0) //if wop is damaged and it exists
             {
                 int powerLevel = this.wopVault.getWop(Integer.valueOf(itemMeta.getLocalizedName().substring(4))).getPowerLevel(2);
                 if (powerLevel > 0)
