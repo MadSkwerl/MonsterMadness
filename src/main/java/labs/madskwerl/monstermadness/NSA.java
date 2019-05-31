@@ -127,7 +127,12 @@ public class NSA implements Listener
             if(WOP.isWOP(itemStack))
             {
                 if(WOP.getPowerLevel(itemStack, "AMMO REGEN") > 0 || WOP.getPowerLevel(itemStack, "ROBBING") < 0)
-                    new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
+                {
+                    ItemMeta itemMeta = itemStack.getItemMeta();
+                    itemMeta.setLocalizedName(itemMeta.getLocalizedName()+"Ammo_Regen");
+                    itemStack.setItemMeta(itemMeta);
+                    new Regen_Ammo_Primer(this, player).runTaskLater(this.plugin, 1);
+                }
                 else if(WOP.getPowerLevel(itemStack, "YOUTH") > 0 || WOP.getPowerLevel(itemStack, "DYING") < 0 && !playerData.isRegenHealth)
                     new Regen_Health(this, player).runTaskLater(this.plugin, 20);
             }
@@ -258,6 +263,25 @@ public class NSA implements Listener
                     System.out.println("Regen Timer Started From Timer.");
             }
 
+        }
+    }
+
+    public void fireAmmoRegen(Player player)
+    {
+        PlayerData playerData = this.playerBank.getPlayer(player.getName());
+        for (ItemStack itemStack: player.getInventory())
+        {
+                ItemMeta itemMeta = itemStack.getItemMeta();
+                String localizedName = "";
+                if(itemMeta != null)
+                    localizedName = itemMeta.getLocalizedName();
+                if(localizedName.contains("Ammo_Regen"))
+                {
+                    itemMeta.setLocalizedName(localizedName.replace("Ammo_Regen", ""));
+                    itemStack.setItemMeta(itemMeta);
+                    new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
+                    break;
+                }
         }
     }
 
