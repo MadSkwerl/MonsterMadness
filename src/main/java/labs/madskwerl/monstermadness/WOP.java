@@ -1,7 +1,6 @@
 package labs.madskwerl.monstermadness;
 
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
@@ -12,7 +11,7 @@ public class WOP
     public static void newWOP(ItemStack itemStack, int powerID, int powerLevel)
     {
         WOP.setDisplayName(itemStack, powerID, powerLevel);
-        WOP.setPower(itemStack, powerID, powerLevel);
+        WOP.setPower(itemStack, powerID, (int)Math.ceil(powerLevel/2.0));
         WOP.setLocalizedName(itemStack);
     }
 

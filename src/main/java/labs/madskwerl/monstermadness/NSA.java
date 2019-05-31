@@ -44,13 +44,16 @@ public class NSA implements Listener
         EquipmentSlot hand = e.getHand();
         System.out.println(action + " with " + hand);
         // If the player right clicks
-        if ((action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)) && hand != null && hand.equals(EquipmentSlot.HAND))
+        if ((action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)))
         {
             ItemStack itemStack =  e.getPlayer().getInventory().getItemInMainHand();
             if(!WOP.isWOP(itemStack))
                 return;
 
             ItemMeta itemMeta = itemStack.getItemMeta();
+            System.out.println("localizedName: " + itemMeta.getLocalizedName());
+            System.out.println("lore: " + itemMeta.getLore());
+
             try //to handle null pointer exceptions
             {
                 long currentTime = System.currentTimeMillis();
@@ -86,6 +89,7 @@ public class NSA implements Listener
                     //Handle Jamming power
                     if (WOP.getPowerLevel(itemStack, "JAMMING") * -1 > roll)
                     {
+                        System.out.println("InteractCanceled");
                         e.setCancelled(true);
                         return;
                     }
@@ -108,7 +112,7 @@ public class NSA implements Listener
                         fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
                     }
                 }
-            }catch(Exception err){}
+            }catch(Exception err){System.out.println("InteractErrorCaught");}
         }
     }
 
@@ -122,7 +126,7 @@ public class NSA implements Listener
             ItemStack itemStack = e.getItem().getItemStack();
             if(WOP.isWOP(itemStack))
             {
-                if(WOP.getPowerLevel(itemStack, "AMMO REGEN") > 0 || WOP.getPowerLevel(itemStack, "AMMO REGEN") < 0)
+                if(WOP.getPowerLevel(itemStack, "AMMO REGEN") > 0 || WOP.getPowerLevel(itemStack, "ROBBING") < 0)
                     new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
                 else if(WOP.getPowerLevel(itemStack, "YOUTH") > 0 || WOP.getPowerLevel(itemStack, "DYING") < 0 && !playerData.isRegenHealth)
                     new Regen_Health(this, player).runTaskLater(this.plugin, 20);
@@ -238,7 +242,7 @@ public class NSA implements Listener
             int currentDamage = damageable.getDamage();
             if(itemStack.getAmount() > 0 && ((powerLevel > 0 && currentDamage > 0)  || (powerLevel < 0 && currentDamage < maxDamage-1))) //if itemStack exits, isDamaged(for regen), isNotFullyDamaged
             {
-                    int newDamage = currentDamage - (powerLevel) * 2;
+                    int newDamage = currentDamage - (powerLevel * 2);
                     if(newDamage < 0)
                         newDamage = 0;
                     if(newDamage > maxDamage - 1)
