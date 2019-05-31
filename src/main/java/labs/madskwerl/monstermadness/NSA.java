@@ -1,6 +1,7 @@
 package labs.madskwerl.monstermadness;
 
 
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -15,6 +16,7 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.util.Vector;
 
 import java.util.Random;
 
@@ -68,10 +70,10 @@ public class NSA implements Listener
             {
                 long currentTime = System.currentTimeMillis();
                 PlayerData playerData = this.playerBank.getPlayer(player.getName());
-                if (playerData != null && (currentTime - playerData.interactTime) > 100)
+                if (playerData != null && (currentTime - playerData.lastAttackTime) > playerData.attackDelay && (currentTime - playerData.lastWOPRegenTime) > 100)
                 {
 
-                    playerData.interactTime = currentTime;
+                    playerData.lastAttackTime = currentTime;
                     Damageable damageable = (Damageable) itemMeta;
                     int fragilityLevel = weapon.getPowerLevel(28);
                     int damageAmount = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
@@ -89,13 +91,11 @@ public class NSA implements Listener
                         System.out.println("Damage Now: " + newDamage);
                         damageable.setDamage(newDamage);
                         itemStack.setItemMeta(itemMeta);
-                        //Handle Ammo Regen Power
-                        if (currentDamage < 1 && weapon.getPowerLevel(2) > 0) //powerID:2 = Ammo Regen
-                        {
-                            new Regen_Ammo(this, itemStack).runTaskLater(this.plugin, 20);
-                            System.out.println("Regen Timer Started From On Use");
-                        }
+                        if(currentDamage == 0)
+                            new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
+
                     }
+
                     //roll for power, will either be jamming or volatile, not both
                     int roll = this.random.nextInt(5);
                     //Handle Jamming power
@@ -104,7 +104,7 @@ public class NSA implements Listener
                         e.setCancelled(true);
                         return;
                     }
-                    /*
+
 
                     //Handle volatile/boom power
                     Location location = null;
@@ -122,13 +122,9 @@ public class NSA implements Listener
                         fireball.setIsIncendiary(false);
                         fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
                     }
-
-                     */
                 }
             }
         }
-
-
     }
     @EventHandler
     public void onPlayerItemHeldEvent(PlayerItemHeldEvent e)
@@ -224,7 +220,7 @@ public class NSA implements Listener
     }
 
     //call by regen_ammo BukkitRunnable
-    public void regenAmmo(ItemStack itemStack)
+    public void regenAmmo(ItemStack itemStack, PlayerData playerData)
     {
         ItemMeta itemMeta = itemStack.getItemMeta();
         Damageable damageable = (Damageable) itemMeta;
@@ -237,13 +233,14 @@ public class NSA implements Listener
                 int powerLevel = this.wopVault.getWop(Integer.valueOf(itemMeta.getLocalizedName().substring(4))).getPowerLevel(2);
                 if (powerLevel > 0)
                 {
-                    int newDamage = currentDamage - (powerLevel * 5);
+                    int newDamage = currentDamage - (powerLevel);
                     if(newDamage < 0)
                         newDamage = 0;
+                    playerData.lastWOPRegenTime = System.currentTimeMillis();
                     System.out.println("Damage Now: " + newDamage);
                     damageable.setDamage(newDamage);
                     itemStack.setItemMeta(itemMeta);
-                    new Regen_Ammo(this, itemStack).runTaskLater(this.plugin, 20);
+                    new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
                     System.out.println("Regen Timer Started From Timer.");
                 }
             }
