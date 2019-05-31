@@ -1,6 +1,7 @@
 package labs.madskwerl.monstermadness;
 
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +34,25 @@ public class WOPVault
         }
         return null;
     }
+/*
+    public void addWOP(ItemStack itemStack)
+    {
+        ItemMeta itemMeta = itemStack.getItemMeta();
 
+        if(itemMeta != null && itemMeta.getLocalizedName().contains("WOP"))
+        {
+           itemMeta.setLocalizedName("WOP_" + next_uid++);
+           int powerLevel = Integer.valueOf(itemMeta.getDisplayName().substring(-1));
+           WOP wop = newWOP(itemStack, );
+        }
+    }
+
+*/
     public boolean removeWOP(int wop_uid)
     {
-        if (wopVault.contains(getWop(wop_uid)))
+        if (wopVault.contains(this.getWop(wop_uid)))
         {
-            wopVault.remove(getWop(wop_uid));
+            wopVault.remove(this.getWop(wop_uid));
             return true;
         }
         return false;

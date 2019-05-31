@@ -25,15 +25,15 @@ public class NSA implements Listener
     private JavaPlugin plugin;
     private WOPVault wopVault;
     private Random random = new Random();
-    private PlayerBank playerBank = new PlayerBank();
+    private PlayerBank playerBank;
 
-    public NSA(JavaPlugin plugin, WOPVault wopVault)
+    public NSA(JavaPlugin plugin, WOPVault wopVault, PlayerBank playerBank)
     {
         this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         this.wopVault = wopVault;
-        for (Player player : plugin.getServer().getOnlinePlayers())
-            playerBank.addPlayer(player.getName());
+        this.playerBank = playerBank;
+
     }
 
     @EventHandler
@@ -227,7 +227,6 @@ public class NSA implements Listener
         if (itemMeta != null)// && itemStack.getAmount() > 0)
         {
             int currentDamage = damageable.getDamage();
-            int maxDamage = itemStack.getType().getMaxDurability();
             if(currentDamage > 0 && itemStack.getAmount() > 0) //if wop is damaged and it exists
             {
                 int powerLevel = this.wopVault.getWop(Integer.valueOf(itemMeta.getLocalizedName().substring(4))).getPowerLevel(2);
