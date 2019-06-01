@@ -12,7 +12,7 @@ import java.util.Random;
 
 public class SpawnWeaponOfPowerCommand implements CommandExecutor
 {
-    public enum WOP_SYNTAX {WOP, REMOVE}
+    public enum WOP_SYNTAX {WOP, ID, VALID, REMOVE}
     private Random random = new Random();
 
     @Override
@@ -27,40 +27,15 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
             System.out.println("args: " + Arrays.deepToString(args));
             player = (Player) sender;
 
-            //====================================Start Block: No Args==========================================
+            //=================================== Start Block: No args ==========================================
             if (args.length == 0)
             {
                 this.outputSyntax(WOP_SYNTAX.WOP, player);
-            }//=======================================End Block: No Args=========================================
-            else if (args[0].matches("-?\\d+"))
-            {
-                try
-                {
-                    int powerID = Integer.valueOf(args[0]);
-                    if(!Powers.getName(powerID, 1).equals(""))
-                    {
-                        if(args.length == 1)
-                        {
-                            for(int i =  -10; i < 11; i +=2)
-                            {
-                                ItemStack itemStack = new ItemStack(Material.IRON_SWORD, 1);
-                                WOP.newWOP(itemStack, powerID, i);
-                                player.getInventory().addItem(itemStack);
-                            }
-                        }
-                        else if(args.length == 2 && args[1].matches("-?\\d+"))
-                        {
-                            ItemStack itemStack = new ItemStack(Material.IRON_SWORD, 1);
-                            WOP.newWOP(itemStack, powerID, Integer.valueOf(args[1]));
-                            player.getInventory().addItem(itemStack);
-                        }
-                        else
-                            this.outputSyntax(WOP_SYNTAX.WOP, player);
-                    }
-                }catch (Exception e){return false;}
             }
-            //========================================Start Block: Remove========================================
-            else if (args[0].toLowerCase().equals("remove") || args[0].toLowerCase().equals("rm"))
+            //==================================== Start Block: Remove ==========================================
+            else if (args[0].toLowerCase().equals("remove") ||
+                     args[0].toLowerCase().equals("rm")     ||
+                     args[0].toLowerCase().equals("rem"))
             {
                 try
                 {
@@ -74,34 +49,81 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
                             item.setAmount(0);
                         }
                     }else
-                    {   this.outputSyntax(WOP_SYNTAX.REMOVE, player);
-                        //return false;
-                    }
+                        this.outputSyntax(WOP_SYNTAX.REMOVE, player);
+
                     player.updateInventory();
                 }catch (Exception e)
                 {   this.outputSyntax(WOP_SYNTAX.REMOVE, player);
                 }
-                //=====================================End Block: Remove============================================
-            } else
-                return false;
+            }
+            //================================ Start Block: Power and Level ======================================
+            else
+            {
+                try
+                {
+
+                    int powerID;
+                    if (args[0].matches("-?\\d+"))//if player sent the ID as a number
+                        powerID = Integer.valueOf(args[0]);//use that number as the ID
+
+                    else//otherwise, if the player sent a string name
+                    {
+                        args[0] = args[0].replace("_", " ");//format that name
+                        powerID = Powers.getID(args[0].toUpperCase());//and get the ID for that name
+                    }
+
+                    if(!Powers.getName(powerID, 1).equals(""))//if the ID matches a valid Power
+                    {
+                        if (args.length == 1)//if no power level specified
+                        {
+                            for(int i =  -10; i < 11; i +=2)//then give player a WOP for each level
+                            {
+                                ItemStack itemStack = new ItemStack(Material.IRON_SWORD, 1);
+                                WOP.newWOP(itemStack, powerID, i);
+                                player.getInventory().addItem(itemStack);
+                            }
+                        }
+                        else if (args.length == 2 && args[1].matches("-?\\d+"))//else if 2nd arg is a number
+                        {
+                            ItemStack itemStack = new ItemStack(Material.IRON_SWORD, 1);
+                            WOP.newWOP(itemStack, powerID, Integer.valueOf(args[1]));//give player a new WOP using
+                            player.getInventory().addItem(itemStack);                //that number as the power level
+                        }
+                        else
+                            this.outputSyntax(WOP_SYNTAX.ID, player);//wrong amount of args, or 2nd arg is not a number
+                    }
+                    else
+                        this.outputSyntax(WOP_SYNTAX.VALID, player);//name or ID was not a valid Power
+
+                }catch (Exception e){return false;}
+            }
+
         }
         return true;
     }
+
 
     private void outputSyntax(WOP_SYNTAX syntax, Player player)
     {
         switch(syntax)
         {
             case WOP:
-                player.sendMessage("Usage: /wop <power_id> <power_level>");
+                player.sendMessage("Usage: /wop [options]" +
+                        "\n<power_id> <power_level>"       +
+                        "\n<power_name> <power_level>"     +
+                        "\nremove [hand]");
+                break;
+            case ID:
+                player.sendMessage("Usage:\n/wop <power_id> <power_level>\n/wop <power_name> <power_level>");
+                break;
+            case VALID:
+                player.sendMessage("Power Name or ID not found");
+                player.sendMessage("Usage: /wop <power_name> <power_level>");
                 break;
             case REMOVE:
                 player.sendMessage("Usage:\n/wop remove [hand]\n/wop rm [h]");
                 break;
             default:
-                player.sendMessage("Usage: /wop [options]" +
-                        "\n<power_id> <power_level>" +
-                        "\nremove [hand]");
                 break;
         }
 

@@ -16,6 +16,6 @@ public class Regen_Ammo_Primer extends BukkitRunnable
     @Override
     public void run()
     {
-        nsa.fireAmmoRegen(player);
+        nsa.fireRegenAmmo(player);
     }
 }
