@@ -187,32 +187,23 @@ public class NSA implements Listener
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
     {
-        int roll = this.random.nextInt(5);
         try{
+            int roll = this.random.nextInt(5);
             Player player = (Player) e.getDamager();
             ItemStack itemStackInMainHand = player.getInventory().getItemInMainHand();
             Entity target = e.getEntity();
-            //================================= Entity vs Entity: Volatile/Boom ======================================
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
-            {
-                @Override
-                public  void run(){
-                    Location location = null;
-                    if (WOP.getPowerLevel(itemStackInMainHand, "VOLATILE") * -1 > roll) //powerID:8 = volatile/boom. * -1 inverts the neg to pos
-                        location = player.getLocation(); //explode on player
-                    else if (WOP.getPowerLevel(itemStackInMainHand, "BOOM") > roll)
-                        location = target.getLocation(); //explode where the player is looking
-                    //note this only handle melee atm
-                    if (location != null)
-                    {
-                        Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
-                        fireball.setCustomName("WOP_" + player.getName()); //provides way to track entity
-                        fireball.setYield(2);
-                        fireball.setIsIncendiary(false);
-                        fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
-                    }
-                }
-            }, 40);
+            //================================= Entity vs Entity: Volatile/======================================
+            //note this only handles melee atm
+           if (WOP.getPowerLevel(itemStackInMainHand, "BOOM") > roll)
+           {
+                Location location = target.getLocation(); //explode where the player is looking
+                Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
+                fireball.setCustomName("WOP_" + player.getName()); //provides way to track entity
+                fireball.setYield(2);
+                fireball.setIsIncendiary(false);
+                fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
+            }
+
 
             //======= End Volatile/Boom ====
 
