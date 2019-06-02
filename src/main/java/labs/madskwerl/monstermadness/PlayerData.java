@@ -10,15 +10,9 @@ public class PlayerData
     public long lastWOPRegenTime = 0;
     public double maxHP = 20;
     public boolean isRegenHealth = false;
+    public int level = 1;
 
-
-    int vampLevel;
-    int lifeRegenLevel;         //Used by poison modifiers as well. ei poison = anti-regen
-    int damageLevel;
-    int defenseLevel;
     int poisonLevel;            //OnHit when pos, OnUse chance when neg
-    int poisonDef;              //Chance to gain poison WhenHit when neg
-    int poisonDefense;
     int moveSpeedLevel;
     int moveSpeedDefenceLevel;
     int moveSpeedOnHitLevel;

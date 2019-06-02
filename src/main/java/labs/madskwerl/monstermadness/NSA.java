@@ -17,8 +17,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
 import java.util.Random;
@@ -188,10 +186,13 @@ public class NSA implements Listener
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
     {
         try{
+
+            //calc base damage modifier
+            
             int roll = this.random.nextInt(5);
             Player player = (Player) e.getDamager();
             ItemStack itemStackInMainHand = player.getInventory().getItemInMainHand();
-            Entity target = e.getEntity();
+            LivingEntity target = (LivingEntity) e.getEntity();
             //================================= Entity vs Entity: Volatile/======================================
             //note this only handles melee atm
            if (WOP.getPowerLevel(itemStackInMainHand, "BOOM") > roll)
@@ -203,8 +204,6 @@ public class NSA implements Listener
                 fireball.setIsIncendiary(false);
                 fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
             }
-
-
             //======= End Volatile/Boom ====
 
         }catch(Exception err){}
