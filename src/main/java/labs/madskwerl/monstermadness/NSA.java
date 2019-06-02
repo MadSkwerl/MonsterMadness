@@ -185,12 +185,10 @@ public class NSA implements Listener
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
     {
+        int roll = this.random.nextInt(5);
         try{
-<<<<<<< HEAD
             Entity attacker = e.getDamager();
             LivingEntity target = (LivingEntity) e.getEntity();
-
-
             //================================= Attacker is Living Entity ===================================
             LivingEntity wopAttacker = (LivingEntity) attacker;
             ItemStack itemStackInMainHand = wopAttacker.getEquipment().getItemInMainHand();
@@ -203,22 +201,6 @@ public class NSA implements Listener
             {
                 Fireball fireball = (Fireball) attacker.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
                 fireball.setCustomName("WOP_" + attacker.getUniqueId()); //provides way to track entity
-=======
-
-            //calc base damage modifier
-            
-            int roll = this.random.nextInt(5);
-            Player player = (Player) e.getDamager();
-            ItemStack itemStackInMainHand = player.getInventory().getItemInMainHand();
-            LivingEntity target = (LivingEntity) e.getEntity();
-            //================================= Entity vs Entity: Volatile/======================================
-            //note this only handles melee atm
-           if (WOP.getPowerLevel(itemStackInMainHand, "BOOM") > roll)
-           {
-                Location location = target.getLocation(); //explode where the player is looking
-                Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
-                fireball.setCustomName("WOP_" + player.getName()); //provides way to track entity
->>>>>>> 54f26357a40b26ec173ebac66d95adfd9505904a
                 fireball.setYield(2);
                 fireball.setIsIncendiary(false);
                 fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
