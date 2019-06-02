@@ -79,7 +79,7 @@ public class NSA implements Listener
                         System.out.println("Damage Now: " + newDamage);
                         damageable.setDamage(newDamage);
                         itemStack.setItemMeta(itemMeta);
-                        if(currentDamage == 0)
+                        if(currentDamage == 0 && WOP.getPowerLevel(itemStack, "REGEN") > 0)
                             new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
 
                     }
@@ -266,7 +266,7 @@ public class NSA implements Listener
         }
     }
 
-    public void fireAmmoRegen(Player player)
+    public void fireRegenAmmo(Player player)
     {
         PlayerData playerData = this.playerBank.getPlayer(player.getName());
         for (ItemStack itemStack: player.getInventory())
@@ -279,7 +279,8 @@ public class NSA implements Listener
                 {
                     itemMeta.setLocalizedName(localizedName.replace("Ammo_Regen", ""));
                     itemStack.setItemMeta(itemMeta);
-                    new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
+                    this.regenAmmo(itemStack , playerData);
+                    // new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
                     break;
                 }
         }
