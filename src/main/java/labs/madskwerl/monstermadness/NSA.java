@@ -48,7 +48,7 @@ public class NSA implements Listener
         // If the player left clicks
         if ((action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)))
         {
-            ItemStack itemStackInMainHand =  e.getPlayer().getInventory().getItemInMainHand();
+            ItemStack itemStackInMainHand =  e.getPlayer().getEquipment().getItemInMainHand();
             if(!WOP.isWOP(itemStackInMainHand))
                 return;
 
@@ -189,31 +189,26 @@ public class NSA implements Listener
     {
         int roll = this.random.nextInt(5);
         try{
-            Player player = (Player) e.getDamager();
-            ItemStack itemStackInMainHand = player.getInventory().getItemInMainHand();
-            Entity target = e.getEntity();
-            //================================= Entity vs Entity: Volatile/Boom ======================================
-            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
-            {
-                @Override
-                public  void run(){
-                    Location location = null;
-                    if (WOP.getPowerLevel(itemStackInMainHand, "VOLATILE") * -1 > roll) //powerID:8 = volatile/boom. * -1 inverts the neg to pos
-                        location = player.getLocation(); //explode on player
-                    else if (WOP.getPowerLevel(itemStackInMainHand, "BOOM") > roll)
-                        location = target.getLocation(); //explode where the player is looking
-                    //note this only handle melee atm
-                    if (location != null)
-                    {
-                        Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
-                        fireball.setCustomName("WOP_" + player.getName()); //provides way to track entity
-                        fireball.setYield(2);
-                        fireball.setIsIncendiary(false);
-                        fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
-                    }
-                }
-            }, 40);
+            Entity attacker = e.getDamager();
+            LivingEntity target = (LivingEntity) e.getEntity();
 
+
+            //================================= Attacker is Living Entity ===================================
+            LivingEntity wopAttacker = (LivingEntity) attacker;
+            ItemStack itemStackInMainHand = wopAttacker.getEquipment().getItemInMainHand();
+            //================================= Entity vs Entity: Boom ======================================
+            Location location = null;
+            if (WOP.getPowerLevel(itemStackInMainHand, "BOOM") > roll)
+                location = target.getLocation(); //explode where the player is looking
+            //note this only handle melee atm
+            if (location != null)
+            {
+                Fireball fireball = (Fireball) attacker.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
+                fireball.setCustomName("WOP_" + attacker.getUniqueId()); //provides way to track entity
+                fireball.setYield(2);
+                fireball.setIsIncendiary(false);
+                fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
+            }
             //======= End Volatile/Boom ====
 
         }catch(Exception err){}
