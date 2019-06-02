@@ -81,6 +81,7 @@ public class NSA implements Listener
                     {
                         System.out.println("Damage: " + currentDamage + " -> " + newDamage);
                         damageable.setDamage(newDamage);
+
                         itemStackInMainHand.setItemMeta(itemMeta);
 
                     //===================================== Interact: Regen ===========================================
@@ -321,7 +322,7 @@ public class NSA implements Listener
                 {
                     itemMeta.setLocalizedName(localizedName.replace("Ammo_Regen", ""));//remove temp tag
                     itemStack.setItemMeta(itemMeta);
-                    this.regenAmmo(itemStack, playerData);
+                    this.regenAmmo(itemStack , playerData);
                     break;
                 }
         }
