@@ -1,6 +1,7 @@
 package labs.madskwerl.monstermadness;
 
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
@@ -17,6 +18,7 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.util.Vector;
 
 import java.util.Random;
@@ -60,7 +62,7 @@ public class NSA implements Listener
                 long currentTime = System.currentTimeMillis();
                 PlayerData playerData = this.playerBank.getPlayer(player.getName());
                 if ((currentTime - playerData.lastAttackTime)   > playerData.attackDelay &&//if player's cool-down is finished
-                    (currentTime - playerData.lastWOPRegenTime) > 100)                     //and 100ms since last WOP regen
+                    (currentTime - playerData.lastWOPRegenTime) > 100)//and 100ms since last WOP regen (to prevent making too many)
                 {
                     playerData.lastAttackTime = currentTime;//then reset player cool-down period
 
@@ -102,7 +104,8 @@ public class NSA implements Listener
                         return;
                     }
                     //======== End Jamming ====
-
+                    if (blockClicked == null)
+                        return;
                     //================================= Interact: Volatile/Boom =======================================
                     Location location = null;
                     if (WOP.getPowerLevel(itemStackInMainHand, "VOLATILE") * -1 > roll) //powerID:8 = volatile/boom. * -1 inverts the neg to pos
@@ -183,6 +186,37 @@ public class NSA implements Listener
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
     {
+        int roll = this.random.nextInt(5);
+        try{
+            Player player = (Player) e.getDamager();
+            ItemStack itemStackInMainHand = player.getInventory().getItemInMainHand();
+            Entity target = e.getEntity();
+            //================================= Entity vs Entity: Volatile/Boom ======================================
+            Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, new Runnable()
+            {
+                @Override
+                public  void run(){
+                    Location location = null;
+                    if (WOP.getPowerLevel(itemStackInMainHand, "VOLATILE") * -1 > roll) //powerID:8 = volatile/boom. * -1 inverts the neg to pos
+                        location = player.getLocation(); //explode on player
+                    else if (WOP.getPowerLevel(itemStackInMainHand, "BOOM") > roll)
+                        location = target.getLocation(); //explode where the player is looking
+                    //note this only handle melee atm
+                    if (location != null)
+                    {
+                        Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
+                        fireball.setCustomName("WOP_" + player.getName()); //provides way to track entity
+                        fireball.setYield(2);
+                        fireball.setIsIncendiary(false);
+                        fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
+                    }
+                }
+            }, 40);
+
+            //======= End Volatile/Boom ====
+
+        }catch(Exception err){}
+
         /*
         EntityDamageEvent.DamageCause damageCause = e.getCause();
         if(damageCause == EntityDamageEvent.DamageCause.PROJECTILE) //retrieves wop from projectile
@@ -232,39 +266,37 @@ public class NSA implements Listener
     @EventHandler
     public void onPlayerItemDamageEvent(PlayerItemDamageEvent e)
     {
-        //cancels regular durabiity lass for wop
+        //================= Cancel Durability Loss ===========================
         try
-        {
-            if (e.getItem().getItemMeta().getLocalizedName().contains("WOP"))
-            {
-                System.out.println("Item Damage Canceled");
-                e.setCancelled(true);
-            }
-        }catch (Exception err){}
+        {   if (WOP.isWOP(e.getItem()))//if the damaged item is a WOP
+                e.setCancelled(true);//cancel the durability loss
+        }catch (Exception err){System.out.println("Error onPlayerItemDamageEvent");}
+        //======= End Durability Loss ====
     }
 
-    //called by regen_ammo BukkitRunnable
+    //called by regen_ammo BukkitRunnable (initially onPlayerInteract, recursively through regenAmmo)
     public void regenAmmo(ItemStack itemStack, PlayerData playerData)
     {
         ItemMeta itemMeta = itemStack.getItemMeta();
         Damageable damageable = (Damageable) itemMeta;
-        if (itemMeta != null)// && itemStack.getAmount() > 0)
+        if (itemStack.getAmount() > 0 && itemMeta != null)//if item exists and has meta
         {
-            int powerLevel = WOP.getPowerLevel(itemStack, "AMMO REGEN");
+            int powerLevel = WOP.getPowerLevel(itemStack, "AMMO REGEN");//check to see if it is ammo regen
             if(powerLevel == 0)
-                powerLevel = WOP.getPowerLevel(itemStack, "ROBBING");
-            int maxDamage = itemStack.getType().getMaxDurability();
-            int currentDamage = damageable.getDamage();
-            if(itemStack.getAmount() > 0 && ((powerLevel > 0 && currentDamage > 0)  || (powerLevel < 0 && currentDamage < maxDamage-1))) //if itemStack exits, isDamaged(for regen), isNotFullyDamaged
+                powerLevel = WOP.getPowerLevel(itemStack, "ROBBING");//or if it is robbing
+            int maxDamage = itemStack.getType().getMaxDurability();//check max damage
+            int currentDamage = damageable.getDamage();            //and current damage
+            boolean hasRegenAndIsDamaged = (powerLevel > 0 && currentDamage > 0);
+            boolean hasRobbingAndIsNotFullyDamaged = (powerLevel < 0 && currentDamage < maxDamage-1);
+            if( hasRegenAndIsDamaged || hasRobbingAndIsNotFullyDamaged ) //isDamaged(for regen) or isNotFullyDamaged(for robbing)
             {
                     int newDamage = currentDamage - (powerLevel * 2);
                     if(newDamage < 0)
-                        newDamage = 0;
+                        newDamage = 0;//catches underflow of durability (going over 100%)
                     if(newDamage > maxDamage - 1)
-                        newDamage = maxDamage -1;
+                        newDamage = maxDamage - 1;//and durability from going to 0%
 
-
-                    playerData.lastWOPRegenTime = System.currentTimeMillis();
+                    playerData.lastWOPRegenTime = System.currentTimeMillis();//timestamp to prevent creating too many regen_ammo tasks
                     damageable.setDamage(newDamage);
                     itemStack.setItemMeta(itemMeta);
                     new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
@@ -287,7 +319,7 @@ public class NSA implements Listener
                     localizedName = itemMeta.getLocalizedName();
                 if(localizedName.contains("Ammo_Regen"))
                 {
-                    itemMeta.setLocalizedName(localizedName.replace("Ammo_Regen", ""));
+                    itemMeta.setLocalizedName(localizedName.replace("Ammo_Regen", ""));//remove temp tag
                     itemStack.setItemMeta(itemMeta);
                     this.regenAmmo(itemStack, playerData);
                     break;
