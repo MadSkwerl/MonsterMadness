@@ -39,79 +39,89 @@ public class NSA implements Listener
     public void onPlayerInteract(PlayerInteractEvent e)
     {
         Player player = e.getPlayer();
-        Block block = e.getClickedBlock();
+        Block blockClicked = e.getClickedBlock();
         Action action = e.getAction();
         EquipmentSlot hand = e.getHand();
         System.out.println(action + " with " + hand);
-        // If the player right clicks
+        // If the player left clicks
         if ((action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)))
         {
-            ItemStack itemStack =  e.getPlayer().getInventory().getItemInMainHand();
-            if(!WOP.isWOP(itemStack))
+            ItemStack itemStackInMainHand =  e.getPlayer().getInventory().getItemInMainHand();
+            if(!WOP.isWOP(itemStackInMainHand))
                 return;
 
-            ItemMeta itemMeta = itemStack.getItemMeta();
+            ItemMeta itemMeta = itemStackInMainHand.getItemMeta();
             System.out.println("localizedName: " + itemMeta.getLocalizedName());
             System.out.println("lore: " + itemMeta.getLore());
 
             try //to handle null pointer exceptions
             {
+                //============================== Interact: Cool-Down/Durability =======================================
                 long currentTime = System.currentTimeMillis();
                 PlayerData playerData = this.playerBank.getPlayer(player.getName());
-                if ((currentTime - playerData.lastAttackTime) > playerData.attackDelay && (currentTime - playerData.lastWOPRegenTime) > 100)
+                if ((currentTime - playerData.lastAttackTime)   > playerData.attackDelay &&//if player's cool-down is finished
+                    (currentTime - playerData.lastWOPRegenTime) > 100)                     //and 100ms since last WOP regen
                 {
+                    playerData.lastAttackTime = currentTime;//then reset player cool-down period
 
-                    playerData.lastAttackTime = currentTime;
                     Damageable damageable = (Damageable) itemMeta;
-                    int fragilityLevel = WOP.getPowerLevel(itemStack, "FRAGILE");
-                    int damageAmount = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
-                    int maxDamage = itemStack.getType().getMaxDurability();
-                    int currentDamage = damageable.getDamage();
-                    int newDamage = currentDamage + (5 + damageAmount * 5);
+                    int fragilityLevel = WOP.getPowerLevel(itemStackInMainHand, "FRAGILE");
+                    int damageAmount   = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
+                    int maxDamage      = itemStackInMainHand.getType().getMaxDurability();
+                    int currentDamage  = damageable.getDamage();
+                    int newDamage      = currentDamage + (5 + damageAmount * 5);
 
-                    //Cancel if not enough durability
-                    if (newDamage >= maxDamage)
+                    if (newDamage >= maxDamage)//if durability is too low
                     {
-                        e.setCancelled(true);
+                        e.setCancelled(true);//cancel the event
                         return;
-                    } else//remove durability (ammo)
+                    } else //otherwise, remove durability (ammo)
                     {
-                        System.out.println("Damage Now: " + newDamage);
+                        System.out.println("Damage: " + currentDamage + " -> " + newDamage);
                         damageable.setDamage(newDamage);
-                        itemStack.setItemMeta(itemMeta);
-                        if(currentDamage == 0 && WOP.getPowerLevel(itemStack, "REGEN") > 0)
-                            new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
 
+                        itemStackInMainHand.setItemMeta(itemMeta);
+
+                    //===================================== Interact: Regen ===========================================
+                        //only start a new regen ammo recursion if current damage is 0 and item has appropriate lore
+                        if(currentDamage == 0 && (WOP.getPowerLevel(itemStackInMainHand, "REGEN")   > 0 ||
+                                                  WOP.getPowerLevel(itemStackInMainHand, "ROBBING") < 0))
+                        {    System.out.println("Regen Timer Started From Player Interact.");
+                            new Regen_Ammo(this, itemStackInMainHand, playerData).runTaskLater(this.plugin, 20);
+                        }
                     }
+                    //======= Regen ====
 
+                    //==================================== Interact: Jamming ==========================================
                     //roll for power, will either be jamming or volatile, not both
                     int roll = this.random.nextInt(5);
                     //Handle Jamming power
-                    if (WOP.getPowerLevel(itemStack, "JAMMING") * -1 > roll)
+                    if (WOP.getPowerLevel(itemStackInMainHand, "JAMMING") * -1 > roll)
                     {
                         System.out.println("InteractCanceled");
                         e.setCancelled(true);
                         return;
                     }
+                    //======== End Jamming ====
 
-
-                    //Handle volatile/boom power
+                    //================================= Interact: Volatile/Boom =======================================
                     Location location = null;
-                    if (WOP.getPowerLevel(itemStack, "VOLATILE") * -1 > roll) //powerID:8 = volatile/boom. * -1 inverts the neg to pos
+                    if (WOP.getPowerLevel(itemStackInMainHand, "VOLATILE") * -1 > roll) //powerID:8 = volatile/boom. * -1 inverts the neg to pos
                         location = player.getLocation(); //explode on player
-                    else if (WOP.getPowerLevel(itemStack, "BOOM") > roll)
-                        location = block.getLocation(); //explode where the player is looking
+                    else if (WOP.getPowerLevel(itemStackInMainHand, "BOOM") > roll)
+                        location = blockClicked.getLocation(); //explode where the player is looking
                     //note this only handle melee atm
                     if (location != null)
                     {
-                        player = e.getPlayer();
                         Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
                         fireball.setCustomName("WOP_" + player.getName()); //provides way to track entity
                         fireball.setYield(2);
                         fireball.setIsIncendiary(false);
                         fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
                     }
+                    //======= End Volatile/Boom ====
                 }
+                //========= End Cool-Down =======
             }catch(Exception err){System.out.println("InteractErrorCaught");}
         }
     }
@@ -126,10 +136,11 @@ public class NSA implements Listener
             ItemStack itemStack = e.getItem().getItemStack();
             if(WOP.isWOP(itemStack))
             {
-                if(WOP.getPowerLevel(itemStack, "AMMO REGEN") > 0 || WOP.getPowerLevel(itemStack, "ROBBING") < 0)
+                if(WOP.getPowerLevel(itemStack, "AMMO REGEN") > 0 || //if item picked up is regen or robbing
+                   WOP.getPowerLevel(itemStack, "ROBBING") < 0)
                 {
                     ItemMeta itemMeta = itemStack.getItemMeta();
-                    itemMeta.setLocalizedName(itemMeta.getLocalizedName()+"Ammo_Regen");
+                    itemMeta.setLocalizedName(itemMeta.getLocalizedName()+"Ammo_Regen");//add temporary tag for primer
                     itemStack.setItemMeta(itemMeta);
                     new Regen_Ammo_Primer(this, player).runTaskLater(this.plugin, 1);
                 }
@@ -233,7 +244,7 @@ public class NSA implements Listener
         }catch (Exception err){}
     }
 
-    //call by regen_ammo BukkitRunnable
+    //called by regen_ammo BukkitRunnable
     public void regenAmmo(ItemStack itemStack, PlayerData playerData)
     {
         ItemMeta itemMeta = itemStack.getItemMeta();
@@ -259,7 +270,7 @@ public class NSA implements Listener
                     itemStack.setItemMeta(itemMeta);
                     new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
 
-                    System.out.println("Damage Now: " + newDamage);
+                    System.out.println("Damage: " + currentDamage + " -> " + newDamage);
                     System.out.println("Regen Timer Started From Timer.");
             }
 
@@ -280,7 +291,6 @@ public class NSA implements Listener
                     itemMeta.setLocalizedName(localizedName.replace("Ammo_Regen", ""));
                     itemStack.setItemMeta(itemMeta);
                     this.regenAmmo(itemStack , playerData);
-                    // new Regen_Ammo(this, itemStack, playerData).runTaskLater(this.plugin, 20);
                     break;
                 }
         }

@@ -7,7 +7,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 public final class MonsterMadness extends JavaPlugin {
 
     @Override
-    public void onEnable() {
+    public void onEnable()
+    {
         // Plugin startup logic
         PlayerBank playerBank = new PlayerBank();
         NSA nsa  = new NSA(this, playerBank);
