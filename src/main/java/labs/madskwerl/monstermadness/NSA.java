@@ -115,7 +115,7 @@ public class NSA implements Listener
                     if (location != null)
                     {
                         Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
-                        fireball.setCustomName("WOP_" + player.getName()); //provides way to track entity
+                        fireball.setCustomName("WOP_" + player.getUniqueId()); //provides way to track entity
                         fireball.setYield(2);
                         fireball.setIsIncendiary(false);
                         fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
@@ -189,6 +189,13 @@ public class NSA implements Listener
         try{
             Entity attacker = e.getDamager();
             LivingEntity target = (LivingEntity) e.getEntity();
+            if (attacker.getCustomName() != null && attacker.getCustomName().length() > 4 &&
+                    target.getUniqueId().toString().equals(attacker.getCustomName().substring(4)))
+            {
+                e.setDamage(0);
+            }
+            if (!(attacker instanceof  LivingEntity))
+                return;
             //================================= Attacker is Living Entity ===================================
             LivingEntity wopAttacker = (LivingEntity) attacker;
             ItemStack itemStackInMainHand = wopAttacker.getEquipment().getItemInMainHand();
@@ -207,7 +214,9 @@ public class NSA implements Listener
             }
             //======= End Volatile/Boom ====
 
-        }catch(Exception err){}
+        }catch(Exception err){
+            System.out.println("entity v entity error");
+        }
 
         /*
         EntityDamageEvent.DamageCause damageCause = e.getCause();
