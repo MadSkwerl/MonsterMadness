@@ -6,6 +6,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
 import java.util.Arrays;
 import java.util.Random;
 
@@ -31,6 +33,10 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
             if (args.length == 0)
             {
                 this.outputSyntax(WOP_SYNTAX.WOP, player);
+                ItemStack itemStack = new ItemStack(Material.STONE_BUTTON, 1);
+                player.getInventory().addItem(itemStack);
+                player.getInventory().getItemInMainHand().setAmount(127);
+
             }
             //==================================== Start Block: Remove ==========================================
             else if (args[0].toLowerCase().equals("remove") ||
@@ -79,14 +85,14 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
                             for(int i =  -10; i < 11; i +=2)//then give player a WOP for each level
                             {
                                 ItemStack itemStack = new ItemStack(Material.IRON_SWORD, 1);
-                                WOP.newWOP(itemStack, powerID, i);
+                                WOP.newWOP("IRON_SWORD", itemStack, powerID, i);
                                 player.getInventory().addItem(itemStack);
                             }
                         }
                         else if (args.length == 2 && args[1].matches("-?\\d+"))//else if 2nd arg is a number
                         {
                             ItemStack itemStack = new ItemStack(Material.IRON_SWORD, 1);
-                            WOP.newWOP(itemStack, powerID, Integer.valueOf(args[1]));//give player a new WOP using
+                            WOP.newWOP("IRON_SWORD", itemStack, powerID, Integer.valueOf(args[1]));//give player a new WOP using
                             player.getInventory().addItem(itemStack);                //that number as the power level
                         }
                         else

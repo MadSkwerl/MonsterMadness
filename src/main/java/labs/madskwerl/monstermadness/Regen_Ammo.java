@@ -7,16 +7,16 @@ public class Regen_Ammo extends BukkitRunnable
 {
     private NSA nsa;
     private ItemStack itemStack;
-    private PlayerData playerData;
-    public Regen_Ammo(NSA nsa, ItemStack itemStack, PlayerData playerData)
+    private LivingEntityData livingEntityData;
+    public Regen_Ammo(NSA nsa, ItemStack itemStack, LivingEntityData livingEntityData)
     {
         this.nsa = nsa;
         this.itemStack = itemStack;
-        this.playerData = playerData;
+        this.livingEntityData = livingEntityData;
     }
     @Override
     public void run()
     {
-        nsa.regenAmmo(this.itemStack, this.playerData);
+        nsa.regenAmmo(this.itemStack, this.livingEntityData);
     }
 }

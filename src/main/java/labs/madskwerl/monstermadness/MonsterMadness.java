@@ -10,18 +10,16 @@ public final class MonsterMadness extends JavaPlugin {
     public void onEnable()
     {
         // Plugin startup logic
-        PlayerBank playerBank = new PlayerBank();
-        NSA nsa  = new NSA(this, playerBank);
+        LivingEntityBank livingEntityBank = new LivingEntityBank();
+        NSA nsa  = new NSA(this, livingEntityBank);
         //register commands
         this.getCommand("WOP").setExecutor(new SpawnWeaponOfPowerCommand());
         //populate PlayerBank & WOPVault
         for (Player player : this.getServer().getOnlinePlayers())
         {
-            playerBank.addPlayer(player.getName());
-            for (ItemStack itemStack : player.getInventory().getContents())
-            {
-                //wopVault.addWOP(itemStack);
-            }
+            LivingEntityData livingEntityData = new PlayerData(); //to be replaced with config file logic to create the livingEntityData object
+            livingEntityBank.addLivingEntityData(player.getUniqueId(), livingEntityData);
+            player.setCustomName("WOP_" + player.getUniqueId());
         }
 
     }
