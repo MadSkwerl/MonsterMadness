@@ -43,12 +43,10 @@ public class NSA implements Listener
         String customName = player.getCustomName();
         Block blockClicked = e.getClickedBlock();
         Action action = e.getAction();
-        EquipmentSlot hand = e.getHand();
-        System.out.println(action + " with " + hand);
         // If the player left clicks
         if ((action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)))
         {
-            ItemStack itemStackInMainHand =  e.getPlayer().getEquipment().getItemInMainHand();
+            ItemStack itemStackInMainHand =  e.getItem();
             if(!WOP.isWOP(itemStackInMainHand))
                 return;
 
@@ -67,7 +65,7 @@ public class NSA implements Listener
                     Damageable damageable = (Damageable) itemMeta;
                     int fragilityLevel = WOP.getPowerLevel(customName, 28); //PowerID:28 = FRAGILE
                     int damageAmount   = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
-                    int maxDamage      = itemStackInMainHand.getType().getMaxDurability();
+                    int maxDamage      = WOP.getMaxDurability(customName);
                     int currentDamage  = damageable.getDamage();
                     int newDamage      = currentDamage + (5 + damageAmount * 5);
 
@@ -143,10 +141,14 @@ public class NSA implements Listener
                     new Regen_Ammo_Primer(this, player).runTaskLater(this.plugin, 1);
                 }
                 else if(WOP.getPowerLevel(customName, 3) != 0 && !livingEntityData.isRegenHealth()) //PowerID:3 = REGEN
+                {
+                    livingEntityData.setRegenHealth(true);
+                    System.out.println("Regen HP Timer Started From ItemPickupEvent");
                     new Regen_Health(this, player).runTaskLater(this.plugin, 20);
+                }
             }
 
-        }catch(Exception err){}
+        }catch(Exception err){System.out.println("PickEventError");}
     }
 
 
@@ -156,16 +158,25 @@ public class NSA implements Listener
         //e.getPlayer().getInventory().setHeldItemSlot(2);
         try
         {
-            String customName = e.getPlayer().getCustomName();
-            if(customName.contains("WOP"))
+            //set player customName to wop localizedName
+            Player player = e.getPlayer();
+            String localizedName = player.getInventory().getItem(e.getNewSlot()).getItemMeta().getLocalizedName();
+            player.setCustomName(localizedName);
+
+            //handle switching to a wop with health regen
+            if(localizedName.contains("WOP"))
             {
                 LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(e.getPlayer().getUniqueId());
-                int regenLevel = WOP.getPowerLevel(customName, 3); //PowerID:3=REGEN
+                int regenLevel = WOP.getPowerLevel(localizedName, 3); //PowerID:3=REGEN
                 if (livingEntityData != null && !livingEntityData.isRegenHealth() && regenLevel != 0)
+                {
+                    livingEntityData.setRegenHealth(true);
+                    System.out.println("Regen HP Timer Started From ItemHeldEvent");
                     new Regen_Health(this, e.getPlayer()).runTaskLater(this.plugin, 20);
+                }
             }
         }
-        catch(Exception err){}
+        catch(Exception err){System.out.println("ItemHeldEventError");}
     }
 
     @EventHandler
@@ -281,7 +292,7 @@ public class NSA implements Listener
             ItemMeta itemMeta = itemStack.getItemMeta();
             String localizedName = itemMeta.getLocalizedName();
             Damageable damageable = (Damageable) itemMeta;
-            if (itemStack.getAmount() > 0 && itemMeta != null)//if item exists and has meta
+            if (itemStack.getAmount() > 0)//if item exists
             {
                 int powerLevel = WOP.getPowerLevel(localizedName, 1);//PowerID:1 = AMMO REGEN
                 int maxDamage = WOP.getMaxDurability(localizedName);//check max damage
@@ -339,7 +350,7 @@ public class NSA implements Listener
                 double maxHP = livingEntityData.getMaxHP();
                 double currentHP = player.getHealth();
                 int regenLevel = WOP.getPowerLevel(customName, 3); //PowerID:3 = REGEN
-                if (regenLevel != 0 && currentHP != maxHP)
+                if ((regenLevel > 0 && currentHP != maxHP) || (regenLevel < 0 && currentHP != 0.5))
                 {
                     double newHP = currentHP + regenLevel;
                     if (newHP > maxHP)
@@ -347,6 +358,7 @@ public class NSA implements Listener
                     else if(newHP < 0.5)
                         newHP = 0.5;
                     player.setHealth(newHP);
+                    System.out.println("Regen HP started from timer");
                     new Regen_Health(this, player).runTaskLater(this.plugin, 20);
                 } else
                     livingEntityData.setRegenHealth(false);

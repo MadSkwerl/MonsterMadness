@@ -48,8 +48,9 @@ public class WOP
         {
             ItemMeta itemMeta = itemStack.getItemMeta();
             String[] powersArray = itemMeta.getLocalizedName().split(":");
-            String hexString = Integer.toString(powerLevel);
-            hexString = hexString.substring(hexString.length() - 2, hexString.length());
+            String hexString = Integer.toHexString(powerLevel);
+            if(hexString.length() > 2)
+                hexString = hexString.substring(hexString.length() - 2, hexString.length());
             powersArray[powerID + 2] = hexString;
             itemMeta.setLocalizedName(String.join(":", powersArray));
             itemStack.setItemMeta(itemMeta);
@@ -123,7 +124,7 @@ public class WOP
     public static int getPowerLevel(String customName, int powerID)
     {
         String[] powersArray = customName.split(":");
-        return (byte)Integer.parseInt(powersArray[powerID + 2]);
+        return (byte)Integer.parseInt(powersArray[powerID + 2], 16);
     }
 
     public static String getPowerName(ItemStack itemStack, int slotNum)
@@ -160,6 +161,10 @@ public class WOP
             default:
                return 0;
         }
+    }
 
+    public static String getType(String customName)
+    {
+        return customName.split(":")[1];
     }
 }
