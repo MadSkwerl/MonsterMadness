@@ -16,6 +16,12 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
 {
     public enum WOP_SYNTAX {WOP, ID, VALID, REMOVE}
     private Random random = new Random();
+    private NSA nsa;
+
+    public SpawnWeaponOfPowerCommand(NSA nsa)
+    {
+        this.nsa = nsa;
+    }
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
@@ -33,10 +39,6 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
             if (args.length == 0)
             {
                 this.outputSyntax(WOP_SYNTAX.WOP, player);
-                ItemStack itemStack = new ItemStack(Material.STONE_BUTTON, 1);
-                player.getInventory().addItem(itemStack);
-                player.getInventory().getItemInMainHand().setAmount(127);
-
             }
             //==================================== Start Block: Remove ==========================================
             else if (args[0].toLowerCase().equals("remove") ||
@@ -84,23 +86,25 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
                         {
                             for(int i =  -10; i < 11; i +=2)//then give player a WOP for each level
                             {
+
                                 ItemStack itemStack = new ItemStack(Material.IRON_SWORD, 1);
                                 WOP.newWOP("IRON_SWORD", itemStack, powerID, i);
                                 player.getInventory().addItem(itemStack);
                             }
+                            nsa.initPlayer(player);
                         }
                         else if (args.length == 2 && args[1].matches("-?\\d+"))//else if 2nd arg is a number
                         {
                             ItemStack itemStack = new ItemStack(Material.IRON_SWORD, 1);
                             WOP.newWOP("IRON_SWORD", itemStack, powerID, Integer.valueOf(args[1]));//give player a new WOP using
                             player.getInventory().addItem(itemStack);                //that number as the power level
+                            nsa.initPlayer(player);
                         }
                         else
                             this.outputSyntax(WOP_SYNTAX.ID, player);//wrong amount of args, or 2nd arg is not a number
                     }
                     else
                         this.outputSyntax(WOP_SYNTAX.VALID, player);//name or ID was not a valid Power
-
                 }catch (Exception e){return false;}
             }
 

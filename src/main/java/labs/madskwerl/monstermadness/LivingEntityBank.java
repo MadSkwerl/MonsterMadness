@@ -14,6 +14,11 @@ public class LivingEntityBank
          this.map.put(uuid, livingEntityData);
      }
 
+     public void removeLivingEntityData(UUID uuid)
+     {
+         this.map.remove(uuid);
+     }
+
     public LivingEntityData getLivingEntityData(String uuid)
     {
         return this.map.get(UUID.fromString(uuid));

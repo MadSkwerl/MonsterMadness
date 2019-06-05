@@ -3,6 +3,7 @@ package labs.madskwerl.monstermadness;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
@@ -10,6 +11,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
@@ -28,7 +30,7 @@ public class NSA implements Listener
     private Random random = new Random();
     private LivingEntityBank livingEntityBank;
 
-    public NSA(JavaPlugin plugin,  LivingEntityBank livingEntityBank)
+    public NSA(JavaPlugin plugin, LivingEntityBank livingEntityBank)
     {
         this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
@@ -46,8 +48,8 @@ public class NSA implements Listener
         // If the player left clicks
         if ((action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)))
         {
-            ItemStack itemStackInMainHand =  e.getItem();
-            if(!WOP.isWOP(itemStackInMainHand))
+            ItemStack itemStackInMainHand = e.getItem();
+            if (!WOP.isWOP(itemStackInMainHand))
                 return;
 
             ItemMeta itemMeta = itemStackInMainHand.getItemMeta();
@@ -57,17 +59,17 @@ public class NSA implements Listener
                 //============================== Interact: Cool-Down/Durability =======================================
                 long currentTime = System.currentTimeMillis();
                 LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
-                if ((currentTime - livingEntityData.getLastAttackTime())   > livingEntityData.getAttackDelay() &&//if player's cool-down is finished
-                    (currentTime - livingEntityData.getLastWOPRegenTime()) > 100)//and 100ms since last WOP regen (to prevent making too many)
+                if ((currentTime - livingEntityData.getLastAttackTime()) > livingEntityData.getAttackDelay() &&//if player's cool-down is finished
+                        (currentTime - livingEntityData.getLastWOPRegenTime()) > 100)//and 100ms since last WOP regen (to prevent making too many)
                 {
                     livingEntityData.setLastAttackTime(currentTime);//then reset player cool-down period
 
                     Damageable damageable = (Damageable) itemMeta;
                     int fragilityLevel = WOP.getPowerLevel(customName, 28); //PowerID:28 = FRAGILE
-                    int damageAmount   = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
-                    int maxDamage      = WOP.getMaxDurability(customName);
-                    int currentDamage  = damageable.getDamage();
-                    int newDamage      = currentDamage + (5 + damageAmount * 5);
+                    int damageAmount = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
+                    int maxDamage = WOP.getMaxDurability(customName);
+                    int currentDamage = damageable.getDamage();
+                    int newDamage = currentDamage + (5 + damageAmount * 5);
 
                     if (newDamage >= maxDamage)//if durability is too low
                     {
@@ -80,10 +82,11 @@ public class NSA implements Listener
 
                         itemStackInMainHand.setItemMeta(itemMeta);
 
-                    //===================================== Interact: Regen ===========================================
+                        //===================================== Interact: Regen ===========================================
                         //only start a new regen ammo recursion if current damage is 0 and item has appropriate lore
-                        if(currentDamage == 0 && WOP.getPowerLevel(customName, 3) != 0) //PowerID:3 = REGEN
-                        {    System.out.println("Regen Timer Started From Player Interact.");
+                        if (currentDamage == 0 && WOP.getPowerLevel(customName, 3) != 0) //PowerID:3 = REGEN
+                        {
+                            System.out.println("Regen Timer Started From Player Interact.");
                             new Regen_Ammo(this, itemStackInMainHand, livingEntityData).runTaskLater(this.plugin, 20);
                         }
                     }
@@ -118,65 +121,11 @@ public class NSA implements Listener
                     //======= End Volatile/Boom ====
                 }
                 //========= End Cool-Down =======
-            }catch(Exception err){System.out.println("InteractErrorCaught");}
-        }
-    }
-
-    @EventHandler
-    public void onEntityPickupItemEvent(EntityPickupItemEvent e)
-    {
-        try
-        {
-            Player player = (Player) e.getEntity();
-            String customName = player.getCustomName();
-            LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
-            ItemStack itemStack = e.getItem().getItemStack();
-            if(WOP.isWOP(itemStack))
+            } catch (Exception err)
             {
-                if(WOP.getPowerLevel(customName, 1) != 0) //PowerID:1 = AMMO_REGEN
-                {
-                    ItemMeta itemMeta = itemStack.getItemMeta();
-                    itemMeta.setLocalizedName(itemMeta.getLocalizedName()+"Ammo_Regen");//add temporary tag for primer
-                    itemStack.setItemMeta(itemMeta);
-                    new Regen_Ammo_Primer(this, player).runTaskLater(this.plugin, 1);
-                }
-                else if(WOP.getPowerLevel(customName, 3) != 0 && !livingEntityData.isRegenHealth()) //PowerID:3 = REGEN
-                {
-                    livingEntityData.setRegenHealth(true);
-                    System.out.println("Regen HP Timer Started From ItemPickupEvent");
-                    new Regen_Health(this, player).runTaskLater(this.plugin, 20);
-                }
-            }
-
-        }catch(Exception err){System.out.println("PickEventError");}
-    }
-
-
-    @EventHandler
-    public void onPlayerItemHeldEvent(PlayerItemHeldEvent e)
-    {
-        //e.getPlayer().getInventory().setHeldItemSlot(2);
-        try
-        {
-            //set player customName to wop localizedName
-            Player player = e.getPlayer();
-            String localizedName = player.getInventory().getItem(e.getNewSlot()).getItemMeta().getLocalizedName();
-            player.setCustomName(localizedName);
-
-            //handle switching to a wop with health regen
-            if(localizedName.contains("WOP"))
-            {
-                LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(e.getPlayer().getUniqueId());
-                int regenLevel = WOP.getPowerLevel(localizedName, 3); //PowerID:3=REGEN
-                if (livingEntityData != null && !livingEntityData.isRegenHealth() && regenLevel != 0)
-                {
-                    livingEntityData.setRegenHealth(true);
-                    System.out.println("Regen HP Timer Started From ItemHeldEvent");
-                    new Regen_Health(this, e.getPlayer()).runTaskLater(this.plugin, 20);
-                }
+                System.out.println("InteractErrorCaught");
             }
         }
-        catch(Exception err){System.out.println("ItemHeldEventError");}
     }
 
     @EventHandler
@@ -184,7 +133,7 @@ public class NSA implements Listener
     {
         //debug stuff atm
         System.out.println(e.getEntity() + " was hit by " + e.getCause() + " for " + e.getDamage() + ". Orig: " + e.getOriginalDamage(EntityDamageEvent.DamageModifier.BASE));
-        if(e.getCause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION)
+        if (e.getCause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION)
         {
             //e.setDamage(1.0);
             //e.setCancelled(true);
@@ -205,7 +154,9 @@ public class NSA implements Listener
             LivingEntity target = (LivingEntity) e.getEntity();
             String targetCutomName = target.getCustomName();
 
-
+            LivingEntityData targetLivingEntityData = this.livingEntityBank.getLivingEntityData(target.getUniqueId());
+            if (targetLivingEntityData == null) //target data doesnot exist in the bank
+                this.livingEntityBank.addLivingEntityData(target.getUniqueId(), new LivingEntityData());
             //================================= Attacker is Living Entity ===================================
             ItemStack itemStackInMainHand = attacker.getEquipment().getItemInMainHand();
             //================================= Entity vs Entity: Boom ======================================
@@ -223,7 +174,8 @@ public class NSA implements Listener
             fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
             //======= End Volatile/Boom ====
 
-        }catch(Exception err){
+        } catch (Exception err)
+        {
             System.out.println("entity v entity error");
         }
 
@@ -278,11 +230,92 @@ public class NSA implements Listener
     {
         //================= Cancel Durability Loss ===========================
         try
-        {   if (WOP.isWOP(e.getItem()))//if the damaged item is a WOP
+        {
+            if (WOP.isWOP(e.getItem()))//if the damaged item is a WOP
                 e.setCancelled(true);//cancel the durability loss
-        }catch (Exception err){System.out.println("Error onPlayerItemDamageEvent");}
+        } catch (Exception err)
+        {
+            System.out.println("Error onPlayerItemDamageEvent");
+        }
         //======= End Durability Loss ====
     }
+
+    @EventHandler
+    public void onPlayerItemHeldEvent(PlayerItemHeldEvent e)
+    {
+        //e.getPlayer().getInventory().setHeldItemSlot(2);
+        try
+        {
+            //set player customName to wop localizedName
+            Player player = e.getPlayer();
+            String localizedName = player.getInventory().getItem(e.getNewSlot()).getItemMeta().getLocalizedName();
+            player.setCustomName(localizedName);
+
+            //handle switching to a wop with health regen
+            if (localizedName.contains("WOP"))
+            {
+                LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(e.getPlayer().getUniqueId());
+                int regenLevel = WOP.getPowerLevel(localizedName, 3); //PowerID:3=REGEN
+                if (livingEntityData != null && !livingEntityData.isRegenHealth() && regenLevel != 0)
+                {
+                    livingEntityData.setRegenHealth(true);
+                    System.out.println("Regen HP Timer Started From ItemHeldEvent");
+                    new Regen_Health(this, e.getPlayer()).runTaskLater(this.plugin, 20);
+                }
+            }
+        } catch (Exception err)
+        {
+            System.out.println("ItemHeldEventError");
+        }
+    }
+
+
+    @EventHandler
+    public void onPlayerDropItemEvent(PlayerDropItemEvent e)
+    {
+        try
+        {
+            if (e.getPlayer().getInventory().getItemInMainHand().getType().equals(Material.AIR))
+                e.getPlayer().setCustomName("");
+        }catch (Exception err){System.out.println("DroppedItemException");}
+    }
+
+
+    @EventHandler
+    public void onEntityPickupItemEvent(EntityPickupItemEvent e)
+    {
+        try
+        {
+            Player player = (Player) e.getEntity();
+            LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
+            ItemStack itemStack = e.getItem().getItemStack(); //Object is a copy of what will be put in the players inventory
+            String localizedName = itemStack.getItemMeta().getLocalizedName();
+
+            if (player.getInventory().getItemInMainHand().getType().equals(Material.AIR))
+                player.setCustomName(localizedName);
+
+            if (WOP.isWOP(itemStack))
+            {
+                if (WOP.getPowerLevel(localizedName, 1) != 0) //PowerID:1 = AMMO_REGEN
+                {
+                    ItemMeta itemMeta = itemStack.getItemMeta();
+                    itemMeta.setLocalizedName(itemMeta.getLocalizedName() + "Ammo_Regen");//add temporary tag for primer
+                    itemStack.setItemMeta(itemMeta);
+                    new Regen_Ammo_Primer(this, player).runTaskLater(this.plugin, 1);
+                } else if (WOP.getPowerLevel(player.getCustomName(), 3) != 0 && !livingEntityData.isRegenHealth()) //PowerID:3 = REGEN
+                {
+                    livingEntityData.setRegenHealth(true);
+                    System.out.println("Regen HP Timer Started From ItemPickupEvent");
+                    new Regen_Health(this, player).runTaskLater(this.plugin, 20);
+                }
+            }
+
+        } catch (Exception err)
+        {
+            System.out.println("PickEventError");
+        }
+    }
+
 
     //called by regen_ammo BukkitRunnable (initially onPlayerInteract, recursively through regenAmmo)
     public void regenAmmo(ItemStack itemStack, LivingEntityData livingEntityData)
@@ -317,37 +350,40 @@ public class NSA implements Listener
                 }
 
             }
-        }catch(Exception e){System.out.println("Regen timer fail");}
+        } catch (Exception e)
+        {
+            System.out.println("Regen timer fail");
+        }
     }
 
     public void fireRegenAmmo(Player player)
     {
         LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
-        for (ItemStack itemStack: player.getInventory())
+        for (ItemStack itemStack : player.getInventory())
         {
-                ItemMeta itemMeta = itemStack.getItemMeta();
-                String localizedName = "";
-                if(itemMeta != null)
-                    localizedName = itemMeta.getLocalizedName();
-                if(localizedName.contains("Ammo_Regen"))
-                {
-                    itemMeta.setLocalizedName(localizedName.replace("Ammo_Regen", ""));//remove temp tag
-                    itemStack.setItemMeta(itemMeta);
-                    this.regenAmmo(itemStack , livingEntityData);
-                    break;
-                }
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            String localizedName = "";
+            if (itemMeta != null)
+                localizedName = itemMeta.getLocalizedName();
+            if (localizedName.contains("Ammo_Regen"))
+            {
+                itemMeta.setLocalizedName(localizedName.replace("Ammo_Regen", ""));//remove temp tag
+                itemStack.setItemMeta(itemMeta);
+                this.regenAmmo(itemStack, livingEntityData);
+                break;
+            }
         }
     }
 
     public void regenHealth(Player player)
     {
         LivingEntityData livingEntityData = livingEntityBank.getLivingEntityData(player.getUniqueId());
-        if(livingEntityData != null)
+        if (livingEntityData != null)
         {
             try
             {
                 String customName = player.getCustomName();
-                double maxHP = livingEntityData.getMaxHP();
+                double maxHP = player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue();
                 double currentHP = player.getHealth();
                 int regenLevel = WOP.getPowerLevel(customName, 3); //PowerID:3 = REGEN
                 if ((regenLevel > 0 && currentHP != maxHP) || (regenLevel < 0 && currentHP != 0.5))
@@ -355,7 +391,7 @@ public class NSA implements Listener
                     double newHP = currentHP + regenLevel;
                     if (newHP > maxHP)
                         newHP = maxHP;
-                    else if(newHP < 0.5)
+                    else if (newHP < 0.5)
                         newHP = 0.5;
                     player.setHealth(newHP);
                     System.out.println("Regen HP started from timer");
@@ -369,5 +405,65 @@ public class NSA implements Listener
         }
     }
 
+    public void initPlayer(Player player)
+    {
+        //Regen_Ammo init
+        LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
 
+        try
+        {
+            player.setCustomName(player.getInventory().getItemInMainHand().getItemMeta().getLocalizedName());
+        }catch (Exception e)
+        {
+            System.out.println("initPlayer: CustomName not set");
+            player.setCustomName("");
+        }
+
+        for(ItemStack itemStack : player.getInventory().getContents())
+        {
+            try
+            {
+                String localizedName = itemStack.getItemMeta().getLocalizedName();
+                if (WOP.isWOP(itemStack))
+                {
+                    if (WOP.getPowerLevel(localizedName, 1) != 0) //PowerID:1 = AMMO_REGEN
+                    {
+                        ItemMeta itemMeta = itemStack.getItemMeta();
+                        itemMeta.setLocalizedName(itemMeta.getLocalizedName() + "Ammo_Regen");//add temporary tag for primer
+                        itemStack.setItemMeta(itemMeta);
+                        new Regen_Ammo_Primer(this, player).runTaskLater(this.plugin, 1);
+                    }
+                }
+            }catch (Exception e){}
+        }
+
+        if (WOP.getPowerLevel(player.getCustomName(), 3) != 0 && !livingEntityData.isRegenHealth()) //PowerID:3 = REGEN
+        {
+            livingEntityData.setRegenHealth(true);
+            System.out.println("Regen HP Timer Started From initPlayer");
+            new Regen_Health(this, player).runTaskLater(this.plugin, 20);
+        }
+
+    }
+
+    @EventHandler
+    public void onPlayerLoginEvent(PlayerLoginEvent e)
+    {
+        Player player = e.getPlayer();
+        player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20);
+        player.setHealthScale(20);
+        LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
+        if(livingEntityData == null)
+            livingEntityBank.addLivingEntityData(player.getUniqueId(), new PlayerData());
+        try
+        {
+            this.initPlayer(player);
+        }catch(Exception err){}
+    }
+
+    @EventHandler
+    public void onPlayerLogoffEvent(PlayerQuitEvent e)
+    {
+            this.livingEntityBank.removeLivingEntityData(e.getPlayer().getUniqueId());
+    }
 }
