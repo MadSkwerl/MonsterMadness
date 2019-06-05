@@ -84,7 +84,7 @@ public class NSA implements Listener
 
                         //===================================== Interact: Regen ===========================================
                         //only start a new regen ammo recursion if current damage is 0 and item has appropriate lore
-                        if (currentDamage == 0 && WOP.getPowerLevel(customName, 3) != 0) //PowerID:3 = REGEN
+                        if (currentDamage == 0 && WOP.getPowerLevel(customName, 1) != 0) //PowerID:3 = REGEN
                         {
                             System.out.println("Regen Timer Started From Player Interact.");
                             new Regen_Ammo(this, itemStackInMainHand, livingEntityData).runTaskLater(this.plugin, 20);
@@ -113,11 +113,14 @@ public class NSA implements Listener
                     else if (boomLevel > roll)
                         location = blockClicked.getLocation(); //explode where the player is looking
                     //note this only handles melee atm
-                    Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
-                    fireball.setCustomName(customName + ":" + player.getUniqueId()); //provides way to track entity
-                    fireball.setYield(2);
-                    fireball.setIsIncendiary(false);
-                    fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
+                    if(location != null)
+                    {
+                        Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
+                        fireball.setCustomName(customName + ":" + player.getUniqueId()); //provides way to track entity
+                        fireball.setYield(2);
+                        fireball.setIsIncendiary(false);
+                        fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
+                    }
                     //======= End Volatile/Boom ====
                 }
                 //========= End Cool-Down =======
@@ -431,7 +434,7 @@ public class NSA implements Listener
                         ItemMeta itemMeta = itemStack.getItemMeta();
                         itemMeta.setLocalizedName(itemMeta.getLocalizedName() + "Ammo_Regen");//add temporary tag for primer
                         itemStack.setItemMeta(itemMeta);
-                        new Regen_Ammo_Primer(this, player).runTaskLater(this.plugin, 1);
+                        new Regen_Ammo(this, itemStack, livingEntityData).runTaskLater(this.plugin, 1);
                     }
                 }
             }catch (Exception e){}
