@@ -148,6 +148,11 @@ public class WOP
         }catch (Exception e){return false;}
     }
 
+    public static boolean isWOP(String customName)
+    {
+        return customName.contains("WOP");
+    }
+
     public static int getMaxDurability(String localizedName)
     {
         String[] localizedNameArray = localizedName.split(":");

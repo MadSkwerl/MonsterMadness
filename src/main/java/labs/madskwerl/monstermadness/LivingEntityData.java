@@ -12,6 +12,7 @@ public class LivingEntityData
     private int level = 1;
     private int baseATK = 10;
     private int baseDEF = 10;
+    private boolean onInteractCanceled = false;
 
     public LivingEntityData()
     {
@@ -97,5 +98,15 @@ public class LivingEntityData
         this.baseDEF = baseDEF;
     }
 
-   
+    public boolean isOnInteractCanceled()
+    {
+        return onInteractCanceled;
+    }
+
+    public void setOnInteractCanceled(boolean onInteractCanceled)
+    {
+        this.onInteractCanceled = onInteractCanceled;
+    }
+
+
 }
