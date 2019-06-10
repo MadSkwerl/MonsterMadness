@@ -1,35 +1,26 @@
 package labs.madskwerl.monstermadness;
 
 
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
-import org.bukkit.block.Block;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDropItemEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.projectiles.ProjectileSource;
-import org.bukkit.util.Vector;
 
 import java.util.Random;
-import java.util.UUID;
 
 public class NSA implements Listener
 {
     private MonsterMadness plugin;
-    private Random random = new Random();
-    private LivingEntityBank livingEntityBank;
+    public Random random = new Random();
+    public LivingEntityBank livingEntityBank;
 
     public NSA(MonsterMadness plugin, LivingEntityBank livingEntityBank)
     {
@@ -42,245 +33,54 @@ public class NSA implements Listener
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e)
     {
-        Player player = e.getPlayer();
-        String customName = player.getCustomName();
-        Block blockClicked = e.getClickedBlock();
         Action action = e.getAction();
-        // If the player left clicks
-        if ((action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)))
+        String customName = e.getPlayer().getCustomName();
+        if (customName == null)
+            customName = "";
+        if (customName.contains("WOP") && (action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)))
         {
-            ItemStack itemStackInMainHand = e.getItem();
-            if (!WOP.isWOP(itemStackInMainHand))
-                return;
+            if (customName.contains("IRON_SWORD"))
+                WOP_IRON_SWORD.onUse(e, this.plugin, this);
+            else if (customName.contains("WOP_BOW"))
+                WOP_BOW.onUse(e, this.plugin, this);
 
-            ItemMeta itemMeta = itemStackInMainHand.getItemMeta();
-
-            try //to handle null pointer exceptions
-            {
-                //============================== Interact: Cool-Down/Durability =======================================
-                long currentTime = System.currentTimeMillis();
-                LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
-                if ((currentTime - livingEntityData.getLastAttackTime()) > livingEntityData.getAttackDelay() &&//if player's cool-down is finished
-                        (currentTime - livingEntityData.getLastWOPRegenTime()) > 100)//and 100ms since last WOP regen (to prevent making too many)
-                {
-                    livingEntityData.setLastAttackTime(currentTime);//then reset player cool-down period
-
-                    Damageable damageable = (Damageable) itemMeta;
-                    int fragilityLevel = WOP.getPowerLevel(customName, 28); //PowerID:28 = FRAGILE
-                    int damageMultiplier = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
-                    int maxDamage = WOP.getMaxDurability(customName);
-                    int currentDamage = damageable.getDamage();
-                    int newDamage = currentDamage + (5 + damageMultiplier * 5);
-
-                    if (newDamage >= maxDamage)//if durability is too low
-                    {
-                        e.setCancelled(true);//cancel the event
-                        livingEntityData.setOnInteractCanceled(true);
-                        return;
-                    } else //otherwise, remove durability (ammo)
-                    {
-                        System.out.println("Damage: " + currentDamage + " -> " + newDamage);
-                        damageable.setDamage(newDamage);
-
-                        itemStackInMainHand.setItemMeta(itemMeta);
-
-                        //===================================== Interact: Regen ===========================================
-                        //only start a new regen ammo recursion if current damage is 0 and item has appropriate lore
-                        if (currentDamage == 0 && WOP.getPowerLevel(customName, 1) != 0) //PowerID:3 = REGEN
-                        {
-                            System.out.println("Regen Timer Started From Player Interact.");
-                            new Regen_Ammo(this, itemStackInMainHand, livingEntityData).runTaskLater(this.plugin, 20);
-                        }
-                    }
-                    //======= Regen ====
-
-                    //==================================== Interact: Jamming ==========================================
-                    //roll for power, will either be jamming or volatile, not both
-                    int roll = this.random.nextInt(5);
-                    //Handle Jamming power
-                    if (WOP.getPowerLevel(customName, 0) * -1 > roll)//PowerID:0 = JAMMING
-                    {
-                        System.out.println("InteractCanceled");
-                        e.setCancelled(true);
-                        return;
-                    }
-                    //======== End Jamming ====
-                    if (blockClicked == null)
-                        return;
-                    //================================= Interact: Volatile/Boom =======================================
-                    Location location = null;
-                    int boomLevel = WOP.getPowerLevel(customName, 8);
-                    if (boomLevel * -1 > roll) //PowerID:8 = volatile/boom. * -1 inverts the neg to pos
-                        location = player.getLocation(); //explode on player
-                    else if (boomLevel > roll)
-                        location = blockClicked.getLocation(); //explode where the player is looking
-                    //note this only handles melee atm
-                    if (location != null)
-                    {
-                        Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
-                        fireball.setCustomName(customName + ":" + player.getUniqueId()); //provides way to track entity
-                        fireball.setYield(2);
-                        fireball.setIsIncendiary(false);
-                        fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
-                    }
-                    //======= End Volatile/Boom ====
-                }
-                //========= End Cool-Down =======
-            } catch (Exception err)
-            {
-                System.out.println("InteractErrorCaught");
-            }
         }
-    }
 
-    @EventHandler
-    public void onEntityDamageEvent(EntityDamageEvent e)
-    {
-        //debug stuff atm
-        System.out.println(e.getEntity() + " was hit by " + e.getCause() + " for " + e.getDamage() + ". Orig: " + e.getOriginalDamage(EntityDamageEvent.DamageModifier.BASE));
-        if (e.getCause() == EntityDamageEvent.DamageCause.BLOCK_EXPLOSION)
-        {
-            //e.setDamage(1.0);
-            //e.setCancelled(true);
-            //EntityDamageEvent event = new EntityDamageEvent(e.getEntity(), EntityDamageEvent.DamageCause.CUSTOM, e.getDamage());
-            //this.plugin.getServer().getPluginManager().callEvent(event);
-        }
     }
 
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
     {
-            //locate attacker from source
-            Entity source = e.getDamager();
-            EntityDamageEvent.DamageCause cause = e.getCause();
-            
-            
-            Entity attacker;
-            String attackerCustomName;
-            String sourceCustomName = source.getCustomName();
-            if (source.getType().equals(EntityType.FIREBALL))
-            {
-                if (sourceCustomName.contains("WOP"))
-                    attacker = this.plugin.getServer().getEntity(UUID.fromString(sourceCustomName.split(":")[Powers.NumberOfPowers + 2]));
-                else
-                    attacker = source;
-            }
-            else if (e.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE))
-            {
-                if (sourceCustomName.contains("WOP"))
-                {
-                    ProjectileSource shooter = ((Projectile)source).getShooter();
-                    if (shooter instanceof Entity)
-                        attacker = (Entity) shooter;
-                    else
-                        attacker = source;
-                }
-                else
-                    attacker = source;
-            }
+        Entity source = e.getDamager();
+        String sourceCustomName  = source.getCustomName();
+        if(sourceCustomName == null)
+            sourceCustomName = "";
+
+        if (e.getDamager().getType().equals(EntityType.FIREBALL))
+            WOP_EXPLOSION.onHit(e, this.plugin, this);
+        else if (sourceCustomName.contains("IRON_SWORD"))
+            WOP_IRON_SWORD.onHit(e, this.plugin, this);
+        else if (sourceCustomName.contains("BOW"))
+        {
+            if (source instanceof Projectile)
+                WOP_BOW.projectile_onHit(e, this.plugin, this);
             else
-                attacker = source;
-            attackerCustomName = attacker.getCustomName();
-
-            //locate defender
+                WOP_BOW.onHit(e, this.plugin, this);
+        }
+        else //attacker is non-wop & non-explosive
+        {
             Entity defender = e.getEntity();
-            String defenderCustomName = defender.getCustomName();
-
-            if(attackerCustomName == null)
-                attackerCustomName = "";
-            if(defenderCustomName == null)
+            String defenderCustomName  = source.getCustomName();
+            if (defenderCustomName == null)
                 defenderCustomName = "";
 
-            //================================= Cancellation Block ======================================\
-            //Note: additional cancel condition below that is not in cancellation block
-            boolean bothPlayers = (attacker instanceof Player && defender instanceof  Player);
-            boolean bothNotPlayers = !(attacker instanceof Player) && !(defender instanceof Player);
-            boolean oneIsWOP = attackerCustomName.contains("WOP") || defenderCustomName.contains("WOP");
-            boolean isBowAttack = WOP.isWOP(attackerCustomName) && WOP.getType(attackerCustomName).equals("BOW") && cause.equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK);
-            if (bothPlayers || (bothNotPlayers && oneIsWOP) || isBowAttack)
+            if (defenderCustomName.contains("WOP"))
             {
-                e.setCancelled(true);
-                return;
+                int protectionLevel = WOP.getPowerLevel(defenderCustomName, 5); //PowerID:5 = PROTECTION/WEAKNESS
+                double protectionModifier = 1 - protectionLevel * .1;
+                e.setDamage(e.getDamage() * protectionModifier);
             }
-            
-            //================================= Damage Application Block ======================================
-            int attackerLevel;
-            int defenderLevel;
-            if (attacker instanceof Player)
-            {
-                LivingEntityData attackerLED = this.livingEntityBank.getLivingEntityData(attacker.getUniqueId());
-
-                //Is set in on interact when there is not enough ammo
-                if(attackerLED.isOnInteractCanceled())
-                {
-                    e.setCancelled(true);
-                    attackerLED.setOnInteractCanceled(false);
-                    return;
-                }
-
-                attackerLevel = attackerLED.getLevel();
-                if (defenderCustomName.contains("WOP"))
-                    defenderLevel = (int)this.plugin.wopMonsterLevel;
-                else
-                    defenderLevel = this.livingEntityBank.getLivingEntityData(attacker.getUniqueId()).getLevel();
-            }
-            else
-            {
-                defenderLevel = this.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
-                if (attackerCustomName.contains("WOP"))
-                    attackerLevel = (int)this.plugin.wopMonsterLevel;
-                else
-                    attackerLevel = this.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
-            }
-
-            double levelRatioModifier = 1 + (attackerLevel - defenderLevel) * 0.01;
-
-            int protectionLevel = !defenderCustomName.contains("WOP") ? 0 : WOP.getPowerLevel(defenderCustomName, 5); //PowerID:5 = PROTECTION/WEAKNESS
-            double protectionModifier = 1 - protectionLevel * .1;
-            if (cause.equals(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION))
-            {
-                int explosiveProtectionLevel = !defenderCustomName.contains("WOP") ? 0 : WOP.getPowerLevel(defenderCustomName, 9); //PowerID:9 = BLAST PRUF/CRUMBLE
-                double explosiveProtection = 1 - explosiveProtectionLevel * 0.15;
-                if ((explosiveProtectionLevel > 0 && protectionLevel < 0) || (explosiveProtectionLevel < 0 && protectionLevel > 0))
-                    protectionModifier += explosiveProtection;
-                else
-                    protectionModifier = (protectionLevel > explosiveProtectionLevel) ? protectionLevel:explosiveProtection;
-            }
-
-            int damageLevel = !attackerCustomName.contains("WOP") ? 0 : WOP.getPowerLevel(attackerCustomName, 4); //PowerID:9 = BLAST PRUF/CRUMBLE
-            double damageIncreaseModifier = 1 + damageLevel * 0.1;
-
-            int wopBaseDamage = 0;
-            if (attackerCustomName.contains("WOP") && defenderCustomName.contains("WOP"))
-            {
-                int attackerBase = this.livingEntityBank.getLivingEntityData(attacker.getUniqueId()).getBaseATK();
-                int defenderBase = this.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getBaseDEF();
-                wopBaseDamage = attackerBase - defenderBase;
-            }
-
-            double damage = wopBaseDamage + e.getDamage() * levelRatioModifier * protectionModifier * damageIncreaseModifier;
-            System.out.println(attacker.getName() + " dealt " + damage + " damage to " + defender.getName());
-
-            
-            //================================= Entity vs Entity: Boom ======================================
-
-            int roll = this.random.nextInt(5);
-            try
-            {
-                Location location = null;
-                if (WOP.getPowerLevel(attackerCustomName, 8) > roll)//PowerID:8 = BOOM
-                location = defender.getLocation(); //explode where the player is looking
-            //note this only handles melee atm
-                Fireball fireball = (Fireball) attacker.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
-                fireball.setCustomName(attackerCustomName + attacker.getUniqueId()); //provides way to track entity
-                fireball.setYield(2);
-                fireball.setIsIncendiary(false);
-                fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
-            } catch (Exception err)
-            {
-                System.out.println("Explosion Catch");
-            }
-        //======= End Volatile/Boom ====
+        }
     }
 
     @EventHandler

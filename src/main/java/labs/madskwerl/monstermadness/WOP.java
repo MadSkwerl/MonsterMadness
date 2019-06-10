@@ -14,7 +14,7 @@ public class WOP
 
         ItemMeta itemMeta = itemStack.getItemMeta();
         String localizedName = "WOP:" + wopName;
-        for (int i = 0; i < 31; i++)
+        for (int i = 0; i < Powers.NumberOfPowers; i++)
             localizedName += ":" + "0";
         itemMeta.setLocalizedName(localizedName);
         itemStack.setItemMeta(itemMeta);
