@@ -1,6 +1,7 @@
 package labs.madskwerl.monstermadness;
 
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -9,19 +10,20 @@ import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDropItemEvent;
-import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.projectiles.ProjectileSource;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 
@@ -150,35 +152,34 @@ public class NSA implements Listener
     @EventHandler
     public void onEntityDamageByEntityEvent(EntityDamageByEntityEvent e)
     {
+        try
+        {
             //locate attacker from source
             Entity source = e.getDamager();
             EntityDamageEvent.DamageCause cause = e.getCause();
-            
-            
+
+
             Entity attacker;
             String attackerCustomName;
-            String sourceCustomName = source.getCustomName();
+            String sourceCustomName = source.getCustomName()==null?"":source.getCustomName();
             if (source.getType().equals(EntityType.FIREBALL))
             {
                 if (sourceCustomName.contains("WOP"))
                     attacker = this.plugin.getServer().getEntity(UUID.fromString(sourceCustomName.split(":")[Powers.NumberOfPowers + 2]));
                 else
                     attacker = source;
-            }
-            else if (e.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE))
+            } else if (e.getCause().equals(EntityDamageEvent.DamageCause.PROJECTILE))
             {
                 if (sourceCustomName.contains("WOP"))
                 {
-                    ProjectileSource shooter = ((Projectile)source).getShooter();
+                    ProjectileSource shooter = ((Projectile) source).getShooter();
                     if (shooter instanceof Entity)
                         attacker = (Entity) shooter;
                     else
                         attacker = source;
-                }
-                else
+                } else
                     attacker = source;
-            }
-            else
+            } else
                 attacker = source;
             attackerCustomName = attacker.getCustomName();
 
@@ -186,14 +187,14 @@ public class NSA implements Listener
             Entity defender = e.getEntity();
             String defenderCustomName = defender.getCustomName();
 
-            if(attackerCustomName == null)
+            if (attackerCustomName == null)
                 attackerCustomName = "";
-            if(defenderCustomName == null)
+            if (defenderCustomName == null)
                 defenderCustomName = "";
 
             //================================= Cancellation Block ======================================\
             //Note: additional cancel condition below that is not in cancellation block
-            boolean bothPlayers = (attacker instanceof Player && defender instanceof  Player);
+            boolean bothPlayers = (attacker instanceof Player && defender instanceof Player);
             boolean bothNotPlayers = !(attacker instanceof Player) && !(defender instanceof Player);
             boolean oneIsWOP = attackerCustomName.contains("WOP") || defenderCustomName.contains("WOP");
             boolean isBowAttack = WOP.isWOP(attackerCustomName) && WOP.getType(attackerCustomName).equals("BOW") && cause.equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK);
@@ -202,7 +203,7 @@ public class NSA implements Listener
                 e.setCancelled(true);
                 return;
             }
-            
+
             //================================= Damage Application Block ======================================
             int attackerLevel;
             int defenderLevel;
@@ -211,7 +212,7 @@ public class NSA implements Listener
                 LivingEntityData attackerLED = this.livingEntityBank.getLivingEntityData(attacker.getUniqueId());
 
                 //Is set in on interact when there is not enough ammo
-                if(attackerLED.isOnInteractCanceled())
+                if (attackerLED.isOnInteractCanceled())
                 {
                     e.setCancelled(true);
                     attackerLED.setOnInteractCanceled(false);
@@ -220,15 +221,14 @@ public class NSA implements Listener
 
                 attackerLevel = attackerLED.getLevel();
                 if (defenderCustomName.contains("WOP"))
-                    defenderLevel = (int)this.plugin.wopMonsterLevel;
+                    defenderLevel = (int) this.plugin.wopMonsterLevel;
                 else
                     defenderLevel = this.livingEntityBank.getLivingEntityData(attacker.getUniqueId()).getLevel();
-            }
-            else
+            } else
             {
                 defenderLevel = this.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
                 if (attackerCustomName.contains("WOP"))
-                    attackerLevel = (int)this.plugin.wopMonsterLevel;
+                    attackerLevel = (int) this.plugin.wopMonsterLevel;
                 else
                     attackerLevel = this.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
             }
@@ -244,7 +244,7 @@ public class NSA implements Listener
                 if ((explosiveProtectionLevel > 0 && protectionLevel < 0) || (explosiveProtectionLevel < 0 && protectionLevel > 0))
                     protectionModifier += explosiveProtection;
                 else
-                    protectionModifier = (protectionLevel > explosiveProtectionLevel) ? protectionLevel:explosiveProtection;
+                    protectionModifier = (protectionLevel > explosiveProtectionLevel) ? protectionLevel : explosiveProtection;
             }
 
             int damageLevel = !attackerCustomName.contains("WOP") ? 0 : WOP.getPowerLevel(attackerCustomName, 4); //PowerID:9 = BLAST PRUF/CRUMBLE
@@ -261,7 +261,7 @@ public class NSA implements Listener
             double damage = wopBaseDamage + e.getDamage() * levelRatioModifier * protectionModifier * damageIncreaseModifier;
             System.out.println(attacker.getName() + " dealt " + damage + " damage to " + defender.getName());
 
-            
+
             //================================= Entity vs Entity: Boom ======================================
 
             int roll = this.random.nextInt(5);
@@ -269,8 +269,8 @@ public class NSA implements Listener
             {
                 Location location = null;
                 if (WOP.getPowerLevel(attackerCustomName, 8) > roll)//PowerID:8 = BOOM
-                location = defender.getLocation(); //explode where the player is looking
-            //note this only handles melee atm
+                    location = defender.getLocation(); //explode where the player is looking
+                //note this only handles melee atm
                 Fireball fireball = (Fireball) attacker.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
                 fireball.setCustomName(attackerCustomName + attacker.getUniqueId()); //provides way to track entity
                 fireball.setYield(2);
@@ -280,7 +280,11 @@ public class NSA implements Listener
             {
                 System.out.println("Explosion Catch");
             }
-        //======= End Volatile/Boom ====
+            //======= End Volatile/Boom ====
+        }catch(Exception err)
+        {
+            err.printStackTrace();
+        }
     }
 
     @EventHandler
@@ -301,11 +305,39 @@ public class NSA implements Listener
     @EventHandler
     public void onPlayerItemHeldEvent(PlayerItemHeldEvent e)
     {
+
+        System.out.println("old: " + e.getPreviousSlot() + " new: " + e.getNewSlot());
         //e.getPlayer().getInventory().setHeldItemSlot(2);
+
         try
         {
-            //set player customName to wop localizedName
             Player player = e.getPlayer();
+            if(e.getPlayer().isSneaking())
+            {
+                LivingEntityData playerData = livingEntityBank.getLivingEntityData(player.getUniqueId());
+                if(e.getPreviousSlot() == 8 && e.getNewSlot() == 0)
+                {
+                    playerData.powerIndexPlus();
+                    System.out.println("power index: " + playerData.getPowerIndex());
+                    player.getInventory().setContents(playerData.getPowerUps(playerData.getPowerIndex()));
+                    player.updateInventory();
+                }else if (e.getPreviousSlot() == 0 && e.getNewSlot() == 8)
+                {
+                    playerData.powerIndexMinus();
+                    System.out.println("power index: " + playerData.getPowerIndex());
+                    player.getInventory().setContents(playerData.getPowerUps(playerData.getPowerIndex()));
+                    player.updateInventory();
+                }
+            }
+        }catch(Exception err)
+        {
+            System.err.println("ItemHeldEvent: Sneak Swap");
+            err.printStackTrace();
+        }
+        try
+        {
+            Player player = e.getPlayer();
+            //set player customName to wop localizedName
             String localizedName = player.getInventory().getItem(e.getNewSlot()).getItemMeta().getLocalizedName();
             player.setCustomName(localizedName);
 
@@ -321,9 +353,10 @@ public class NSA implements Listener
                     new Regen_Health(this, e.getPlayer()).runTaskLater(this.plugin, 20);
                 }
             }
+
         } catch (Exception err)
         {
-            System.out.println("ItemHeldEventError");
+            System.out.println("ItemHeldEvent: WOP");
         }
     }
 
@@ -373,6 +406,46 @@ public class NSA implements Listener
             System.out.println("PickEventError");
         }
     }
+
+    @EventHandler
+    public void onPlayerToggleSneakEvent(PlayerToggleSneakEvent e)
+    {
+        Player player = e.getPlayer();
+        boolean isSneaking = player.isSneaking();
+        LivingEntityData playerData = livingEntityBank.getLivingEntityData(player.getUniqueId());
+        System.out.println(player.getName() + " is sneaking: " + player.isSneaking());
+        if(isSneaking)
+        {
+            player.getInventory().setContents(playerData.getBackupInventory());
+            player.updateInventory();
+        } else {
+
+            playerData.backupInventory(player.getInventory().getStorageContents());
+            ItemStack[] powerUps = playerData.getPowerUps(playerData.getPowerIndex());
+            player.getInventory().setContents(powerUps);
+            player.updateInventory();
+
+            BukkitRunnable myTask = new BukkitRunnable()
+            {
+                @Override
+                public void run()
+                {
+                    int cur, prev;
+                    prev = player.getInventory().getHeldItemSlot();
+                    while (player.isSneaking())
+                    {
+                        cur = player.getInventory().getHeldItemSlot();
+                        if (cur != prev)
+                            System.out.println("Current slot: " + cur + " -> " + prev);
+                        prev = cur;
+                    }
+                    this.cancel();
+                }
+            };
+            myTask.runTaskAsynchronously(plugin);
+        }
+    }
+
 
 
     //called by regen_ammo BukkitRunnable (initially onPlayerInteract, recursively through regenAmmo)
@@ -524,4 +597,7 @@ public class NSA implements Listener
     {
             this.livingEntityBank.removeLivingEntityData(e.getPlayer().getUniqueId());
     }
+
+
+
 }
