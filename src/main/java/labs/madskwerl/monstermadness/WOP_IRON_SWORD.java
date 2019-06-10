@@ -88,9 +88,9 @@ public class WOP_IRON_SWORD
                 {
                     Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
                     fireball.setCustomName(customName + ":" + player.getUniqueId()); //provides way to track entity
-                    fireball.setYield(2);
+                    fireball.setYield(10);
                     fireball.setIsIncendiary(false);
-                    fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
+                    //fireball.setVelocity(new Vector(0, -10, 0)); //sends straight down fast enough to explode immediately
                 }
                 //======= End Volatile/Boom ====
             }
@@ -205,7 +205,7 @@ public class WOP_IRON_SWORD
                 location = defender.getLocation(); //explode where the player is looking
             //note this only handles melee atm
             Fireball fireball = (Fireball) attacker.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
-            fireball.setCustomName(attackerCustomName + attacker.getUniqueId()); //provides way to track entity
+            fireball.setCustomName(attackerCustomName + ":" + attacker.getUniqueId()); //provides way to track entity
             fireball.setYield(2);
             fireball.setIsIncendiary(false);
             fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately

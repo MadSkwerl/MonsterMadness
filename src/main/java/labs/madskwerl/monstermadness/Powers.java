@@ -151,6 +151,8 @@ public class Powers
 
     static String getName(int powerID, int powerLevel)
     {
+        if(powerLevel == 0)
+            return "";
         switch(powerID)
         {
             case -1:
@@ -167,6 +169,8 @@ public class Powers
                 return powerLevel > 0 ? "PROTECTION" : "WEAKNESS";
             case 8:
                 return powerLevel > 0 ? "BOOM" : "VOLATILE";
+            case 9:
+                return powerLevel > 0 ? "BLAST PRUF" : "CRUMBLE";
             case 12:
                 return powerLevel > 0 ?  "SPEED" : "SLOW";
         }
@@ -175,6 +179,9 @@ public class Powers
 
     static String getPrefix(int powerID, int powerLevel)
     {
+        if(powerLevel == 0)
+            return "";
+
         switch(powerID)
         {
 
@@ -188,6 +195,8 @@ public class Powers
                 return powerLevel > 0 ? "" : "FEEBLE ";
             case 8:
                 return powerLevel > 0 ? "" : "VOLATILE ";
+            case 9:
+                return powerLevel > 0 ? "BLAST PRUF " : "";
             case 12:
                 return powerLevel > 0 ? "CAFFEINATED " : "";
         }
@@ -197,7 +206,10 @@ public class Powers
     static String getSuffix(int powerID, int powerLevel)
     {
 
-            switch(powerID)
+        if(powerLevel == 0)
+            return "";
+
+        switch(powerID)
             {
                 case -1:
                     return powerLevel > 0 ? " OF POWER" : "";
@@ -213,33 +225,12 @@ public class Powers
                     return powerLevel > 0 ? " OF PROTECTION" : " OF WEAKNESS";
                 case 8:
                     return powerLevel > 0 ? " OF BOOM" : "";
+                case 9:
+                    return powerLevel > 0 ? "" : " OF CRUMBLING";
                 case 12:
                     return powerLevel > 0 ? "" : " OF THE TURTLE";
             }
             return "";
-    }
-
-    static void enchant(int powerID, int powerLevel, ItemStack itemStack)
-    {
-
-        ItemMeta itemMeta = itemStack.getItemMeta();
-        switch (powerID)
-        {
-            case 0:
-                if (powerLevel > 0)
-                {
-                    if (itemMeta instanceof Damageable)
-                    {
-                        ((Damageable) itemMeta).setDamage(0);
-                        itemMeta.setUnbreakable(true);
-                    }
-                }
-                else
-                    if(itemMeta != null){itemMeta.setUnbreakable(false);}
-                itemStack.setItemMeta(itemMeta);
-                break;
-
-        }
     }
 
     static int getBaseMagnitude(int powerID)

@@ -29,11 +29,11 @@ public class WOP
             ItemMeta itemMeta = itemStack.getItemMeta();
 
             String materialName = itemStack.getType().toString();
-            materialName = materialName.replace("_", " "); //               Example 1:    Example 2:
-            itemMeta.setDisplayName(Powers.getPrefix(powerID, powerLevel) + //set prefix                     BROKEN
-                    materialName + //material name  IRON SWORD     CROSSBOW
-                    Powers.getSuffix(powerID, powerLevel) + //suffix          OF POWER
-                    " " + powerLevel);  //power level        3             -2
+            materialName = materialName.replace("_", " ");        //               Example 1:    Example 2:
+            itemMeta.setDisplayName(Powers.getPrefix(powerID, powerLevel) +         //set prefix                     BROKEN
+                    materialName +                                                  //material name  IRON SWORD     CROSSBOW
+                    Powers.getSuffix(powerID, powerLevel) +                         //suffix          OF POWER
+                    " " + powerLevel);                                             //power level        3             -2
             itemStack.setItemMeta(itemMeta);
             return true;
         } catch (Exception e)

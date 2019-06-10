@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
@@ -56,7 +57,13 @@ public class NSA implements Listener
         if(sourceCustomName == null)
             sourceCustomName = "";
 
-        if (e.getDamager().getType().equals(EntityType.FIREBALL))
+
+        Entity defender = e.getEntity();
+        String defenderCustomName  = source.getCustomName();
+        if (defenderCustomName == null)
+            defenderCustomName = "";
+
+        if (e.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_EXPLOSION)&&(sourceCustomName.contains("WOP") || defenderCustomName.contains("WOP")))
             WOP_EXPLOSION.onHit(e, this.plugin, this);
         else if (sourceCustomName.contains("IRON_SWORD"))
             WOP_IRON_SWORD.onHit(e, this.plugin, this);
@@ -69,11 +76,6 @@ public class NSA implements Listener
         }
         else //attacker is non-wop & non-explosive
         {
-            Entity defender = e.getEntity();
-            String defenderCustomName  = source.getCustomName();
-            if (defenderCustomName == null)
-                defenderCustomName = "";
-
             if (defenderCustomName.contains("WOP"))
             {
                 int protectionLevel = WOP.getPowerLevel(defenderCustomName, 5); //PowerID:5 = PROTECTION/WEAKNESS

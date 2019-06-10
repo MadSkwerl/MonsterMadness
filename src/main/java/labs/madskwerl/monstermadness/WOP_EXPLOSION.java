@@ -95,7 +95,8 @@ public class WOP_EXPLOSION
             wopBaseDamage = attackerBase - defenderBase;
         }
 
-        double damage = wopBaseDamage + e.getFinalDamage() * levelRatioModifier * protectionModifier * damageIncreaseModifier;
+        double damage = wopBaseDamage + 10 * levelRatioModifier * protectionModifier * damageIncreaseModifier; //Note: overriding event damage ("+ 10") to ensuring a more consistent damage
+        e.setDamage(damage);
         System.out.println(attacker.getName() + " dealt " + damage + " damage to " + defender.getName());
     }
 }
