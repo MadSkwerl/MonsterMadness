@@ -1,8 +1,11 @@
 package labs.madskwerl.monstermadness;
 
 
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.banner.Pattern;
+import org.bukkit.block.banner.PatternType;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -12,14 +15,14 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
-
 import java.util.Random;
 
 public class NSA implements Listener
 {
-    private MonsterMadness plugin;
+    public MonsterMadness plugin;
     public Random random = new Random();
     public LivingEntityBank livingEntityBank;
 
@@ -59,7 +62,7 @@ public class NSA implements Listener
 
 
         Entity defender = e.getEntity();
-        String defenderCustomName  = source.getCustomName();
+        String defenderCustomName  = defender.getCustomName();
         if (defenderCustomName == null)
             defenderCustomName = "";
 
@@ -135,6 +138,27 @@ public class NSA implements Listener
     {
         try
         {
+            ItemMeta itemMeta = e.getItemDrop().getItemStack().getItemMeta();
+            String localizedName = null;
+            if(itemMeta != null)
+                localizedName = itemMeta.getLocalizedName();
+            if(localizedName == null)
+                localizedName = "";
+
+            LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(e.getPlayer().getUniqueId());
+            if(localizedName.contains("CHARGES_ARTIFACT"))
+            {
+                e.getItemDrop().remove();
+                livingEntityData.getChargesArtifact().setAmount(0);
+                livingEntityData.setChargesArtifact(null);
+            }
+            else if(localizedName.contains("INV_ARTIFACT"))
+            {
+                e.getItemDrop().remove();
+                livingEntityData.getChargesArtifact().setAmount(0);
+                livingEntityData.setChargesArtifact(null);
+            }
+
             if (e.getPlayer().getInventory().getItemInMainHand().getType().equals(Material.AIR))
                 e.getPlayer().setCustomName("");
         }catch (Exception err){System.out.println("DroppedItemException");}
@@ -325,5 +349,85 @@ public class NSA implements Listener
     public void onPlayerLogoffEvent(PlayerQuitEvent e)
     {
             this.livingEntityBank.removeLivingEntityData(e.getPlayer().getUniqueId());
+    }
+
+    public void bindChargesArtifact(Player player)
+    {
+        //Scans player inventory and and binds the first found (should only be 1) artifact to the player LivingEntityData
+        //refreshCharges Artifact is then called (b/c this should only be called when add a charge object to play inv)
+        LivingEntityData livingEntityData  = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
+        for(ItemStack itemStack : player.getInventory().getContents())
+        {
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            String localizedNamed;
+            if(itemMeta != null)
+                localizedNamed = itemMeta.getLocalizedName();
+            else
+                localizedNamed = "";
+
+            if(localizedNamed.contains("CHARGES_ARTIFACT"))
+            {
+                livingEntityData.setChargesArtifact(itemStack);
+                break;
+            }
+        }
+        this.refreshChargesArtifact(player);
+    }
+
+    public void refreshChargesArtifact(Player player)
+    {
+        ItemStack chargesArtifact = this.livingEntityBank.getLivingEntityData(player.getUniqueId()).getChargesArtifact();
+        //return if player is crouching or does not have charges artifact
+        if(player.isSneaking())
+            return;
+
+        ItemStack itemStackInMainHand = player.getInventory().getItemInMainHand();
+        ItemMeta itemMetaInMainHand = itemStackInMainHand.getItemMeta();
+        String localizedName;
+        if(itemMetaInMainHand == null)
+            localizedName = "";
+        else
+            localizedName = itemMetaInMainHand.getLocalizedName();
+
+        Material baseColor = Material.BLACK_BANNER;
+        int charges = 1;
+
+        if(localizedName.contains("WOP"))
+        {
+            //calc charges
+            int currentDamage = ((Damageable) itemMetaInMainHand).getDamage();
+            int maxDamage = WOP.getMaxDurability(localizedName);
+            charges = maxDamage - currentDamage;
+
+            //determine color, base on range of 100 charges
+            if(charges > 75) //Green:100-76 Yellow:75-51 Orange:50-26 Red:25-1 Black:0
+            {
+                baseColor = Material.LIME_BANNER;
+            }
+            else if(charges > 50)
+            {
+                baseColor = Material.YELLOW_BANNER;
+            }
+            else if(charges > 25)
+            {
+                baseColor = Material.ORANGE_BANNER;
+            }
+            else if(charges > 0)
+            {
+                baseColor = Material.RED_BANNER;
+            }
+            else
+                baseColor = Material.BLACK_BANNER;
+
+            //handle under and over flow conditions
+            if(charges > 100)
+                charges = 100;
+            else if(charges < 1)
+                charges = 1;
+        }
+        //set amount and color
+        chargesArtifact.setAmount(charges);
+        chargesArtifact.setType(baseColor);
+        player.updateInventory();
     }
 }

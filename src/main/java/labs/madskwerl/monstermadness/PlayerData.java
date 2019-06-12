@@ -11,5 +11,4 @@ public class PlayerData extends LivingEntityData
         this.setAttackDelay(100);
         this.setMaxHP(20);
     }
-
 }

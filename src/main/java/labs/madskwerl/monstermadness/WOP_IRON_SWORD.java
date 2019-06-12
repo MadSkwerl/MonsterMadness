@@ -39,9 +39,9 @@ public class WOP_IRON_SWORD
                 int damageMultiplier = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
                 int maxDamage = WOP.getMaxDurability(customName);
                 int currentDamage = damageable.getDamage();
-                int newDamage = currentDamage + (5 + damageMultiplier * 5);
+                int newDamage = currentDamage + (1 + damageMultiplier);
 
-                if (newDamage >= maxDamage)//if durability is too low
+                if (newDamage > maxDamage)//if durability is too low
                 {
                     e.setCancelled(true);//cancel the event
                     livingEntityData.setOnInteractCanceled(true);
@@ -50,9 +50,9 @@ public class WOP_IRON_SWORD
                 {
                     System.out.println("Damage: " + currentDamage + " -> " + newDamage);
                     damageable.setDamage(newDamage);
-
                     itemStackInMainHand.setItemMeta(itemMeta);
 
+                    nsa.refreshChargesArtifact(player);
                     //===================================== Interact: Regen ===========================================
                     //only start a new regen ammo recursion if current damage is 0 and item has appropriate lore
                     if (currentDamage == 0 && WOP.getPowerLevel(customName, 1) != 0) //PowerID:3 = REGEN
@@ -88,9 +88,9 @@ public class WOP_IRON_SWORD
                 {
                     Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
                     fireball.setCustomName(customName + ":" + player.getUniqueId()); //provides way to track entity
-                    fireball.setYield(10);
+                    fireball.setYield(2);
                     fireball.setIsIncendiary(false);
-                    //fireball.setVelocity(new Vector(0, -10, 0)); //sends straight down fast enough to explode immediately
+                    fireball.setVelocity(new Vector(0, -1000, 0)); //sends straight down fast enough to explode immediately
                 }
                 //======= End Volatile/Boom ====
             }
@@ -130,7 +130,8 @@ public class WOP_IRON_SWORD
         {
             long currentTime = System.currentTimeMillis();
             LivingEntityData attackerLED = nsa.livingEntityBank.getLivingEntityData(attacker.getUniqueId());
-            ItemStack mainHandItemStack = ((Player) attacker).getInventory().getItemInMainHand();
+            Player player = (Player)attacker;
+            ItemStack mainHandItemStack = player.getInventory().getItemInMainHand();
             ItemMeta itemMeta = mainHandItemStack.getItemMeta();
 
             if ((currentTime - attackerLED.getLastAttackTime()) > attackerLED.getAttackDelay() &&               //if player's cool-down is finished
@@ -143,9 +144,9 @@ public class WOP_IRON_SWORD
                 int damageMultiplier = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
                 int maxDamage = WOP.getMaxDurability(attackerCustomName);
                 int currentDamage = damageable.getDamage();
-                int newDamage = currentDamage + (5 + damageMultiplier * 5);
+                int newDamage = currentDamage + (1 + damageMultiplier);
 
-                if (newDamage >= maxDamage)//if durability is too low
+                if (newDamage > maxDamage)//if durability is too low
                 {
                     e.setCancelled(true);//cancel the event
                     return;
@@ -153,6 +154,15 @@ public class WOP_IRON_SWORD
                 {
                     System.out.println("Damage: " + currentDamage + " -> " + newDamage);
                     damageable.setDamage(newDamage);
+                    mainHandItemStack.setItemMeta(itemMeta);
+                    nsa.refreshChargesArtifact(player);
+                    //===================================== Interact: Regen ===========================================
+                    //only start a new regen ammo recursion if current damage is 0 and item has appropriate lore
+                    if (currentDamage == 0 && WOP.getPowerLevel(attackerCustomName, 1) != 0) //PowerID:3 = REGEN
+                    {
+                        System.out.println("Regen Timer Started From Player Interact.");
+                        new Regen_Ammo(nsa, mainHandItemStack, attackerLED).runTaskLater(monsterMadness, 20);
+                    }
                 }
             }
         }

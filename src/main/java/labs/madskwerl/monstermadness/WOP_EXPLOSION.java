@@ -41,9 +41,10 @@ public class WOP_EXPLOSION
         //================================= Cancellation Block ======================================\
         //Note: additional cancel condition below that is not in cancellation block
         boolean bothPlayers = (attacker instanceof Player && defender instanceof  Player);
+        boolean attackSelf = attacker == defender;
         boolean bothNotPlayers = !(attacker instanceof Player) && !(defender instanceof Player);
         boolean oneIsWOP = attackerCustomName.contains("WOP") || defenderCustomName.contains("WOP");
-        if (bothPlayers || (bothNotPlayers && oneIsWOP))
+        if ((bothPlayers && !attackSelf) || (bothNotPlayers && oneIsWOP))
         {
             e.setCancelled(true);
             return;
@@ -97,6 +98,6 @@ public class WOP_EXPLOSION
 
         double damage = wopBaseDamage + 10 * levelRatioModifier * protectionModifier * damageIncreaseModifier; //Note: overriding event damage ("+ 10") to ensuring a more consistent damage
         e.setDamage(damage);
-        System.out.println(attacker.getName() + " dealt " + damage + " damage to " + defender.getName());
+        System.out.println( "The Thing dealt " + damage + " damage to " + defender.getName());
     }
 }

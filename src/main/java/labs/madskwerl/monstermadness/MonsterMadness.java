@@ -17,6 +17,7 @@ public final class MonsterMadness extends JavaPlugin
         NSA nsa  = new NSA(this, livingEntityBank);
         //register commands
         this.getCommand("WOP").setExecutor(new SpawnWeaponOfPowerCommand(nsa));
+        this.getCommand("KIT").setExecutor(new SpawnKitCommand(nsa));
         //populate PlayerBank & WOPVault
         for (Player player : this.getServer().getOnlinePlayers())
         {

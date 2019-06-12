@@ -1,9 +1,9 @@
 package labs.madskwerl.monstermadness;
 
+import org.bukkit.inventory.ItemStack;
+
 public class LivingEntityData
 {
-
-
     private int attackDelay = 100;
     private long lastAttackTime = 0;
     private long lastWOPRegenTime = 0;
@@ -13,6 +13,8 @@ public class LivingEntityData
     private int baseATK = 10;
     private int baseDEF = 10;
     private boolean onInteractCanceled = false;
+    private ItemStack invArtifact = null;
+    private ItemStack chargesArtifact = null;
 
     public LivingEntityData()
     {
@@ -108,5 +110,23 @@ public class LivingEntityData
         this.onInteractCanceled = onInteractCanceled;
     }
 
+    public ItemStack getInvArtifact()
+    {
+        return invArtifact;
+    }
 
+    public void setInvArtifact(ItemStack invArtifact)
+    {
+        this.invArtifact = invArtifact;
+    }
+
+    public ItemStack getChargesArtifact()
+    {
+        return chargesArtifact;
+    }
+
+    public void setChargesArtifact(ItemStack chargesArtifact)
+    {
+        this.chargesArtifact = chargesArtifact;
+    }
 }

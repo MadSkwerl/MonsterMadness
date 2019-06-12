@@ -9,3 +9,6 @@ commands:
   WOP:
     description: Get a WOP
     usage: /WOP
+  KIT:
+    description: Get Inventory and Charges Artifacts
+    usage: /KIT

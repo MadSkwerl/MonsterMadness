@@ -1,5 +1,6 @@
 package labs.madskwerl.monstermadness;
 
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -17,6 +18,8 @@ public class WOP
         for (int i = 0; i < Powers.NumberOfPowers; i++)
             localizedName += ":" + "0";
         itemMeta.setLocalizedName(localizedName);
+        itemMeta.setUnbreakable(true);
+        itemMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
         itemStack.setItemMeta(itemMeta);
 
         WOP.setPower(itemStack, powerID, (int) Math.ceil(powerLevel / 2.0));
