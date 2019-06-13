@@ -80,8 +80,8 @@ public class SpawnKitCommand implements CommandExecutor
                 itemStack.setItemMeta(itemMeta);
                 this.nsa.livingEntityBank.getLivingEntityData(player.getUniqueId()).setChargesArtifact(itemStack);
                 player.getInventory().addItem(itemStack);                //that number as the power level
-                new Delayed_BindChargesArtifact(this.nsa, player).runTaskLater(this.nsa.plugin, 1);
             }
+            new Delayed_BindChargesArtifact(this.nsa, player).runTaskLater(this.nsa.plugin, 1);
         }
         else
             return false;

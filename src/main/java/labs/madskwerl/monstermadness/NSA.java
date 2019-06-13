@@ -1,6 +1,7 @@
 package labs.madskwerl.monstermadness;
 
 
+import jdk.internal.org.objectweb.asm.tree.TryCatchBlockNode;
 import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
@@ -13,8 +14,12 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.inventory.InventoryAction;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -106,7 +111,6 @@ public class NSA implements Listener
     @EventHandler
     public void onPlayerItemHeldEvent(PlayerItemHeldEvent e)
     {
-        //e.getPlayer().getInventory().setHeldItemSlot(2);
         try
         {
             //set player customName to wop localizedName
@@ -130,6 +134,7 @@ public class NSA implements Listener
         {
             System.out.println("ItemHeldEventError");
         }
+        new Delayed_RefreshChargesArtifact(this, e.getPlayer()).runTaskLater(this.plugin, 1);
     }
 
 
@@ -151,6 +156,7 @@ public class NSA implements Listener
                 e.getItemDrop().remove();
                 livingEntityData.getChargesArtifact().setAmount(0);
                 livingEntityData.setChargesArtifact(null);
+                e.getPlayer().updateInventory();
             }
             else if(localizedName.contains("INV_ARTIFACT"))
             {
@@ -218,7 +224,7 @@ public class NSA implements Listener
                 boolean hasRobbingAndIsNotFullyDamaged = (powerLevel < 0 && currentDamage < maxDamage - 1);
                 if (hasRegenAndIsDamaged || hasRobbingAndIsNotFullyDamaged) //isDamaged(for regen) or isNotFullyDamaged(for robbing)
                 {
-                    int newDamage = currentDamage - (powerLevel * 2);
+                    int newDamage = currentDamage - powerLevel;
                     if (newDamage < 0)
                         newDamage = 0;//catches underflow of durability (going over 100%)
                     if (newDamage > maxDamage - 1)
@@ -227,6 +233,7 @@ public class NSA implements Listener
                     livingEntityData.setLastWOPRegenTime(System.currentTimeMillis());//timestamp to prevent creating too many regen_ammo tasks
                     damageable.setDamage(newDamage);
                     itemStack.setItemMeta(itemMeta);
+                    this.refreshChargesArtifact((Player)(this.plugin.getServer().getEntity(livingEntityData.getUuid())));
                     new Regen_Ammo(this, itemStack, livingEntityData).runTaskLater(this.plugin, 20);
 
                     System.out.println("Damage: " + currentDamage + " -> " + newDamage);
@@ -318,6 +325,12 @@ public class NSA implements Listener
                         new Regen_Ammo(this, itemStack, livingEntityData).runTaskLater(this.plugin, 1);
                     }
                 }
+                else if(localizedName.contains("CHARGES_ARTIFACT"))
+                {
+                    livingEntityData.setChargesArtifact(itemStack);
+                    refreshChargesArtifact(player);
+                }
+
             }catch (Exception e){}
         }
 
@@ -338,7 +351,7 @@ public class NSA implements Listener
         player.setHealthScale(20);
         LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
         if (livingEntityData == null)
-            livingEntityBank.addLivingEntityData(player.getUniqueId(), new PlayerData());
+            livingEntityBank.addLivingEntityData(player.getUniqueId(), new PlayerData(player.getUniqueId()));
         try
         {
             this.initPlayer(player);
@@ -358,17 +371,20 @@ public class NSA implements Listener
         LivingEntityData livingEntityData  = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
         for(ItemStack itemStack : player.getInventory().getContents())
         {
-            ItemMeta itemMeta = itemStack.getItemMeta();
-            String localizedNamed;
-            if(itemMeta != null)
-                localizedNamed = itemMeta.getLocalizedName();
-            else
-                localizedNamed = "";
-
-            if(localizedNamed.contains("CHARGES_ARTIFACT"))
+            if(itemStack != null)
             {
-                livingEntityData.setChargesArtifact(itemStack);
-                break;
+                ItemMeta itemMeta = itemStack.getItemMeta();
+                String localizedNamed;
+                if (itemMeta != null)
+                    localizedNamed = itemMeta.getLocalizedName();
+                else
+                    localizedNamed = "";
+
+                if (localizedNamed.contains("CHARGES_ARTIFACT"))
+                {
+                    livingEntityData.setChargesArtifact(itemStack);
+                    break;
+                }
             }
         }
         this.refreshChargesArtifact(player);
@@ -378,7 +394,7 @@ public class NSA implements Listener
     {
         ItemStack chargesArtifact = this.livingEntityBank.getLivingEntityData(player.getUniqueId()).getChargesArtifact();
         //return if player is crouching or does not have charges artifact
-        if(player.isSneaking())
+        if(player.isSneaking() || chargesArtifact == null)
             return;
 
         ItemStack itemStackInMainHand = player.getInventory().getItemInMainHand();
@@ -429,5 +445,85 @@ public class NSA implements Listener
         chargesArtifact.setAmount(charges);
         chargesArtifact.setType(baseColor);
         player.updateInventory();
+    }
+
+    public void cleanChargesArtifact(Player player, int oldSlot, int newSlot)
+    { //called primarily from onInventoryClickEvent when HotBar swap is used
+        ItemStack newSlotItemStack = player.getInventory().getItem(newSlot);
+        try
+        {
+            if(newSlotItemStack.getItemMeta().getLocalizedName().contains("CHARGES_ARTIFACT"))
+            {
+                this.livingEntityBank.getLivingEntityData(player.getUniqueId()).setChargesArtifact(newSlotItemStack);
+                this.refreshChargesArtifact(player);
+                player.getInventory().getItem(oldSlot).setAmount(0);
+                player.updateInventory();
+            }
+        }catch(Exception e){}
+    }
+
+    @EventHandler
+    public void onInventoryClickEvent(InventoryClickEvent e)
+    {
+        System.out.println("Inventory Click Event");
+        System.out.println("Action: " + e.getAction());
+        System.out.println("Click: " + e.getClick());
+        System.out.println("Clicked Inventory: " + e.getClickedInventory());
+        System.out.println("Current Item: " + e.getCurrentItem());
+        System.out.println("Cursor: " + e.getCursor());
+        System.out.println("Handlers: " + e.getHandlers());
+        System.out.println("Hotbar Button: " + e.getHotbarButton());
+        System.out.println("Raw Slot: " + e.getRawSlot());
+        System.out.println("Slot: " + e.getSlot());
+        try
+        {
+            InventoryAction action = e.getAction();
+            if (action.equals(InventoryAction.PICKUP_ALL)  ||
+                     action.equals(InventoryAction.PICKUP_HALF) ||
+                     action.equals(InventoryAction.PICKUP_SOME) ||
+                     action.equals(InventoryAction.PICKUP_ONE)  ||
+                     action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY))
+            {
+                if (e.getCurrentItem().getItemMeta().getLocalizedName().contains("CHARGES_ARTIFACT"))
+                    e.getCurrentItem().setAmount(1);
+                if(action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY))
+                    new Delayed_BindChargesArtifact(this, (Player)e.getWhoClicked()).runTaskLater(this.plugin, 1);
+            }
+            else if(action.equals(InventoryAction.PLACE_ALL)    ||
+                    action.equals(InventoryAction.PLACE_SOME)   ||
+                    action.equals(InventoryAction.PLACE_ONE))
+            {
+                new Delayed_BindChargesArtifact(this, (Player)e.getWhoClicked()).runTaskLater(this.plugin, 1);
+            }
+            else if(action.equals(InventoryAction.HOTBAR_MOVE_AND_READD) || action.equals(InventoryAction.HOTBAR_SWAP))
+            {
+                ItemStack slotItem = e.getWhoClicked().getInventory().getItem(e.getHotbarButton());
+                if(slotItem.getItemMeta().getLocalizedName().contains("CHARGES_ARTIFACT"))
+                {
+                    slotItem.setAmount(1);
+                    new Delayed_CleanChargesArtifact(this, (Player)e.getWhoClicked(), e.getHotbarButton(), e.getSlot()).runTaskLater(this.plugin, 1);
+                }
+            }
+
+        }catch (Exception err){}
+    }
+
+    @EventHandler
+    public void onInventoryDragEvent(InventoryDragEvent e)
+    {
+        System.out.println("Inventory Drag Event");
+        System.out.println("Cursor: " + e.getCursor());
+        System.out.println("Handlers: " + e.getHandlers());
+        System.out.println("Inventory Slots: " + e.getInventorySlots());
+        System.out.println("New Items: " + e.getNewItems());
+        System.out.println("Old Cursor: " + e.getOldCursor());
+        System.out.println("Raw Slots: " + e.getRawSlots());
+        System.out.println("Type: " + e.getType());
+        System.out.println("Who: " + e.getWhoClicked());
+        try
+        {
+            if(e.getOldCursor().getItemMeta().getLocalizedName().contains("CHARGES_ARTIFACT"))
+                new Delayed_BindChargesArtifact(this, (Player)e.getWhoClicked()).runTaskLater(this.plugin, 1);
+        }catch (Exception err){}
     }
 }

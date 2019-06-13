@@ -3,11 +3,11 @@ package labs.madskwerl.monstermadness;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
-public class Delayed_BindChargesArtifact extends BukkitRunnable
+public class Delayed_RefreshChargesArtifact extends BukkitRunnable
 {
     private NSA nsa;
     private Player player;
-    public Delayed_BindChargesArtifact(NSA nsa, Player player)
+    public Delayed_RefreshChargesArtifact(NSA nsa, Player player)
     {
         this.nsa = nsa;
         this.player = player;
@@ -16,6 +16,6 @@ public class Delayed_BindChargesArtifact extends BukkitRunnable
     @Override
     public void run()
     {
-        this.nsa.bindChargesArtifact(this.player);
+        this.nsa.refreshChargesArtifact(this.player);
     }
 }

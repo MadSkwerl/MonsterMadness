@@ -2,6 +2,8 @@ package labs.madskwerl.monstermadness;
 
 import org.bukkit.inventory.ItemStack;
 
+import java.util.UUID;
+
 public class LivingEntityData
 {
     private int attackDelay = 100;
@@ -15,9 +17,11 @@ public class LivingEntityData
     private boolean onInteractCanceled = false;
     private ItemStack invArtifact = null;
     private ItemStack chargesArtifact = null;
+    private UUID uuid;
 
-    public LivingEntityData()
+    public LivingEntityData(UUID uuid)
     {
+        this.uuid = uuid;
     }
 
     public int getAttackDelay()
@@ -128,5 +132,15 @@ public class LivingEntityData
     public void setChargesArtifact(ItemStack chargesArtifact)
     {
         this.chargesArtifact = chargesArtifact;
+    }
+
+    public UUID getUuid()
+    {
+        return uuid;
+    }
+
+    public void setUuid(UUID uuid)
+    {
+        this.uuid = uuid;
     }
 }
