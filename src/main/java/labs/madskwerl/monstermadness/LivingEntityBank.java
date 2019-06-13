@@ -6,29 +6,38 @@ import java.util.UUID;
 
 public class LivingEntityBank
 {
-   
-     private Map<UUID, LivingEntityData> map = new HashMap<>();
+     private static Map<UUID, LivingEntityData> map2Data = new HashMap<>();
+     private static Map<LivingEntityData, UUID> map2UUID = new HashMap<>();
 
-     public void addLivingEntityData(UUID uuid, LivingEntityData livingEntityData)
+     public static void addLivingEntityData(UUID uuid, LivingEntityData livingEntityData)
      {
-         this.map.put(uuid, livingEntityData);
+         map2Data.put(uuid, livingEntityData);
+         map2UUID.put(livingEntityData, uuid);
      }
 
-     public void removeLivingEntityData(UUID uuid)
+     public static void removeLivingEntityData(UUID uuid)
      {
-         this.map.remove(uuid);
+         map2UUID.remove(map2Data.remove(uuid));
      }
 
-    public LivingEntityData getLivingEntityData(String uuid)
+    public static void removeLivingEntityData(LivingEntityData livingEntityData)
     {
-        return this.map.get(UUID.fromString(uuid));
+        map2Data.remove(map2UUID.remove(livingEntityData));
     }
 
-    public LivingEntityData getLivingEntityData(UUID uuid)
+    public static LivingEntityData getLivingEntityData(String uuid)
     {
-        return this.map.get(uuid);
+        return map2Data.get(UUID.fromString(uuid));
     }
 
+    public static LivingEntityData getLivingEntityData(UUID uuid)
+    {
+        return map2Data.get(uuid);
+    }
 
+    public static UUID getUUID(LivingEntityData livingEntityData)
+    {
+        return map2UUID.get(livingEntityData);
+    }
 
 }

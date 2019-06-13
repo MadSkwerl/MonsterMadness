@@ -13,8 +13,8 @@ public final class MonsterMadness extends JavaPlugin
     public void onEnable()
     {
         // Plugin startup logic
-        LivingEntityBank livingEntityBank = new LivingEntityBank();
-        NSA nsa  = new NSA(this, livingEntityBank);
+        //LivingEntityBank livingEntityBank = new LivingEntityBank();
+        NSA nsa  = new NSA(this);
         //register commands
         this.getCommand("WOP").setExecutor(new SpawnWeaponOfPowerCommand(nsa));
         //populate PlayerBank & WOPVault
@@ -23,7 +23,7 @@ public final class MonsterMadness extends JavaPlugin
             player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20);
             player.setHealthScale(20);
             LivingEntityData livingEntityData = new PlayerData(); //to be replaced with config file logic to create the livingEntityData object
-            livingEntityBank.addLivingEntityData(player.getUniqueId(), livingEntityData);
+            LivingEntityBank.addLivingEntityData(player.getUniqueId(), livingEntityData);
             nsa.initPlayer(player);
             wopMonsterLevel = (this.wopMonsterLevel + livingEntityData.getLevel())/2.0;
         }

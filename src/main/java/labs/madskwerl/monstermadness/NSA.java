@@ -31,13 +31,11 @@ public class NSA implements Listener
 {
     private MonsterMadness plugin;
     private Random random = new Random();
-    private LivingEntityBank livingEntityBank;
 
-    public NSA(MonsterMadness plugin, LivingEntityBank livingEntityBank)
+    public NSA(MonsterMadness plugin)
     {
         this.plugin = plugin;
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
-        this.livingEntityBank = livingEntityBank;
 
     }
 
@@ -61,7 +59,7 @@ public class NSA implements Listener
             {
                 //============================== Interact: Cool-Down/Durability =======================================
                 long currentTime = System.currentTimeMillis();
-                LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
+                LivingEntityData livingEntityData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
                 if ((currentTime - livingEntityData.getLastAttackTime()) > livingEntityData.getAttackDelay() &&//if player's cool-down is finished
                         (currentTime - livingEntityData.getLastWOPRegenTime()) > 100)//and 100ms since last WOP regen (to prevent making too many)
                 {
@@ -209,7 +207,7 @@ public class NSA implements Listener
             int defenderLevel;
             if (attacker instanceof Player)
             {
-                LivingEntityData attackerLED = this.livingEntityBank.getLivingEntityData(attacker.getUniqueId());
+                LivingEntityData attackerLED = LivingEntityBank.getLivingEntityData(attacker.getUniqueId());
 
                 //Is set in on interact when there is not enough ammo
                 if (attackerLED.isOnInteractCanceled())
@@ -223,14 +221,14 @@ public class NSA implements Listener
                 if (defenderCustomName.contains("WOP"))
                     defenderLevel = (int) this.plugin.wopMonsterLevel;
                 else
-                    defenderLevel = this.livingEntityBank.getLivingEntityData(attacker.getUniqueId()).getLevel();
+                    defenderLevel = LivingEntityBank.getLivingEntityData(attacker.getUniqueId()).getLevel();
             } else
             {
-                defenderLevel = this.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
+                defenderLevel = LivingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
                 if (attackerCustomName.contains("WOP"))
                     attackerLevel = (int) this.plugin.wopMonsterLevel;
                 else
-                    attackerLevel = this.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
+                    attackerLevel = LivingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
             }
 
             double levelRatioModifier = 1 + (attackerLevel - defenderLevel) * 0.01;
@@ -253,8 +251,8 @@ public class NSA implements Listener
             int wopBaseDamage = 0;
             if (attackerCustomName.contains("WOP") && defenderCustomName.contains("WOP"))
             {
-                int attackerBase = this.livingEntityBank.getLivingEntityData(attacker.getUniqueId()).getBaseATK();
-                int defenderBase = this.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getBaseDEF();
+                int attackerBase = LivingEntityBank.getLivingEntityData(attacker.getUniqueId()).getBaseATK();
+                int defenderBase = LivingEntityBank.getLivingEntityData(defender.getUniqueId()).getBaseDEF();
                 wopBaseDamage = attackerBase - defenderBase;
             }
 
@@ -311,28 +309,29 @@ public class NSA implements Listener
 
         try
         {
-            Player player = e.getPlayer();
-            if(e.getPlayer().isSneaking())
+            if (e.getNewSlot() != 4)
             {
-                LivingEntityData playerData = livingEntityBank.getLivingEntityData(player.getUniqueId());
-                if(e.getPreviousSlot() == 8 && e.getNewSlot() == 0)
+                Player player = e.getPlayer();
+                if (player.isSneaking())
                 {
-                    playerData.powerIndexPlus();
-                    System.out.println("power index: " + playerData.getPowerIndex());
-                    player.getInventory().setContents(playerData.getPowerUps(playerData.getPowerIndex()));
-                    player.updateInventory();
-                }else if (e.getPreviousSlot() == 0 && e.getNewSlot() == 8)
-                {
-                    playerData.powerIndexMinus();
-                    System.out.println("power index: " + playerData.getPowerIndex());
-                    player.getInventory().setContents(playerData.getPowerUps(playerData.getPowerIndex()));
-                    player.updateInventory();
+                    int newSlot = e.getNewSlot();
+                    LivingEntityData playerData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
+                    int dIndex = (newSlot - 4);
+                    playerData.scrollPowerInventory(dIndex/2==0?dIndex:dIndex/2);
+                    player.getInventory().setHeldItemSlot(4);
+                    return;
                 }
             }
         }catch(Exception err)
         {
+
             System.err.println("ItemHeldEvent: Sneak Swap");
             err.printStackTrace();
+        }finally
+        {
+            Player player = e.getPlayer();
+            if(player.isSneaking())
+                player.getInventory().setHeldItemSlot(4);
         }
         try
         {
@@ -344,7 +343,7 @@ public class NSA implements Listener
             //handle switching to a wop with health regen
             if (localizedName.contains("WOP"))
             {
-                LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(e.getPlayer().getUniqueId());
+                LivingEntityData livingEntityData = LivingEntityBank.getLivingEntityData(e.getPlayer().getUniqueId());
                 int regenLevel = WOP.getPowerLevel(localizedName, 3); //PowerID:3=REGEN
                 if (livingEntityData != null && !livingEntityData.isRegenHealth() && regenLevel != 0)
                 {
@@ -378,7 +377,7 @@ public class NSA implements Listener
         try
         {
             Player player = (Player) e.getEntity();
-            LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
+            LivingEntityData livingEntityData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
             ItemStack itemStack = e.getItem().getItemStack(); //Object is a copy of what will be put in the players inventory
             String localizedName = itemStack.getItemMeta().getLocalizedName();
 
@@ -412,17 +411,19 @@ public class NSA implements Listener
     {
         Player player = e.getPlayer();
         boolean isSneaking = player.isSneaking();
-        LivingEntityData playerData = livingEntityBank.getLivingEntityData(player.getUniqueId());
+        LivingEntityData playerData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
         System.out.println(player.getName() + " is sneaking: " + player.isSneaking());
         if(isSneaking)
         {
             player.getInventory().setContents(playerData.getBackupInventory());
+            player.getInventory().setHeldItemSlot(playerData.getBackupCursor());
             player.updateInventory();
-        } else {
-
+        } else
+        {
             playerData.backupInventory(player.getInventory().getStorageContents());
-            ItemStack[] powerUps = playerData.getPowerUps(playerData.getPowerIndex());
-            player.getInventory().setContents(powerUps);
+            playerData.backupCursor(player.getInventory().getHeldItemSlot());
+            player.getInventory().setHeldItemSlot(4);
+            player.getInventory().setContents(playerData.getPowerInventory());
             player.updateInventory();
 
             BukkitRunnable myTask = new BukkitRunnable()
@@ -438,6 +439,7 @@ public class NSA implements Listener
                         if (cur != prev)
                             System.out.println("Current slot: " + cur + " -> " + prev);
                         prev = cur;
+                        try{Thread.sleep(50);}catch(Exception err){}
                     }
                     this.cancel();
                 }
@@ -489,7 +491,7 @@ public class NSA implements Listener
 
     public void fireRegenAmmo(Player player)
     {
-        LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
+        LivingEntityData livingEntityData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
         for (ItemStack itemStack : player.getInventory())
         {
             ItemMeta itemMeta = itemStack.getItemMeta();
@@ -508,7 +510,7 @@ public class NSA implements Listener
 
     public void regenHealth(Player player)
     {
-        LivingEntityData livingEntityData = livingEntityBank.getLivingEntityData(player.getUniqueId());
+        LivingEntityData livingEntityData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
         if (livingEntityData != null)
         {
             try
@@ -539,7 +541,7 @@ public class NSA implements Listener
     public void initPlayer(Player player)
     {
         //Regen_Ammo init
-        LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
+        LivingEntityData livingEntityData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
 
         try
         {
@@ -583,9 +585,9 @@ public class NSA implements Listener
         Player player = e.getPlayer();
         player.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(20);
         player.setHealthScale(20);
-        LivingEntityData livingEntityData = this.livingEntityBank.getLivingEntityData(player.getUniqueId());
+        LivingEntityData livingEntityData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
         if (livingEntityData == null)
-            livingEntityBank.addLivingEntityData(player.getUniqueId(), new PlayerData());
+            LivingEntityBank.addLivingEntityData(player.getUniqueId(), new PlayerData());
         try
         {
             this.initPlayer(player);
@@ -595,7 +597,7 @@ public class NSA implements Listener
     @EventHandler
     public void onPlayerLogoffEvent(PlayerQuitEvent e)
     {
-            this.livingEntityBank.removeLivingEntityData(e.getPlayer().getUniqueId());
+            LivingEntityBank.removeLivingEntityData(e.getPlayer().getUniqueId());
     }
 
 
