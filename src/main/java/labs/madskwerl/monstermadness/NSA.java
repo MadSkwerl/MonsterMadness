@@ -1,8 +1,6 @@
 package labs.madskwerl.monstermadness;
 
 
-import jdk.internal.org.objectweb.asm.tree.TryCatchBlockNode;
-import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.banner.Pattern;
@@ -525,5 +523,16 @@ public class NSA implements Listener
             if(e.getOldCursor().getItemMeta().getLocalizedName().contains("CHARGES_ARTIFACT"))
                 new Delayed_BindChargesArtifact(this, (Player)e.getWhoClicked()).runTaskLater(this.plugin, 1);
         }catch (Exception err){}
+    }
+
+    @EventHandler
+    public void onPlayerToggleSneakEvent(PlayerToggleSneakEvent e)
+    {
+        Player player = e.getPlayer();
+        LivingEntityData playerData = livingEntityBank.getLivingEntityData(player.getUniqueId());
+        if(player.isSneaking())
+            playerData.swapMainInventory();
+        else
+            playerData.swapPowerInventory();
     }
 }
