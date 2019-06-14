@@ -8,7 +8,7 @@ import java.util.UUID;
 public class WOP_EXPLOSION
 {
     //called from EntityDamageByEntityEvent if Entity.getType() is EntityType.FIREBALL
-    public static void onHit(EntityDamageByEntityEvent e, MonsterMadness monsterMadness, NSA nsa)
+    public static void onHit(EntityDamageByEntityEvent e)
     {
         //locate attacker from source
         Entity source = e.getDamager();
@@ -21,7 +21,7 @@ public class WOP_EXPLOSION
         if(sourceCustomName.contains("WOP"))
         {
             String uuid = sourceCustomName.split(":")[Powers.NumberOfPowers + 2];
-            attacker = monsterMadness.getServer().getEntity(UUID.fromString(uuid));
+            attacker = MonsterMadness.PLUGIN.getServer().getEntity(UUID.fromString(uuid));
         }
         if(attacker != null)
         {
@@ -55,20 +55,20 @@ public class WOP_EXPLOSION
         int defenderLevel;
         if (attacker instanceof Player)
         {
-            LivingEntityData attackerLED = nsa.livingEntityBank.getLivingEntityData(attacker.getUniqueId());
+            LivingEntityData attackerLED = LivingEntityBank.getLivingEntityData(attacker.getUniqueId());
             attackerLevel = attackerLED.getLevel();
             if (defenderCustomName.contains("WOP"))
-                defenderLevel = (int)monsterMadness.wopMonsterLevel;
+                defenderLevel = (int)MonsterMadness.MONSTER_LEVEL_AVERAGE;
             else
-                defenderLevel = nsa.livingEntityBank.getLivingEntityData(attacker.getUniqueId()).getLevel();
+                defenderLevel = LivingEntityBank.getLivingEntityData(attacker.getUniqueId()).getLevel();
         }
         else
         {
-            defenderLevel = nsa.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
+            defenderLevel = LivingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
             if (attackerCustomName.contains("WOP"))
-                attackerLevel = (int)monsterMadness.wopMonsterLevel;
+                attackerLevel = (int)MonsterMadness.MONSTER_LEVEL_AVERAGE;
             else
-                attackerLevel = nsa.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
+                attackerLevel = LivingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
         }
 
         double levelRatioModifier = 1 + (attackerLevel - defenderLevel) * 0.01;
@@ -91,8 +91,8 @@ public class WOP_EXPLOSION
         int wopBaseDamage = 0;
         if (attackerCustomName.contains("WOP") && defenderCustomName.contains("WOP"))
         {
-            int attackerBase = nsa.livingEntityBank.getLivingEntityData(attacker.getUniqueId()).getBaseATK();
-            int defenderBase = nsa.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getBaseDEF();
+            int attackerBase = LivingEntityBank.getLivingEntityData(attacker.getUniqueId()).getBaseATK();
+            int defenderBase = LivingEntityBank.getLivingEntityData(defender.getUniqueId()).getBaseDEF();
             wopBaseDamage = attackerBase - defenderBase;
         }
 
