@@ -1,9 +1,9 @@
 package labs.madskwerl.monstermadness;
 
 import org.bukkit.Location;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.block.Block;
 import org.bukkit.entity.*;
-import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -14,12 +14,11 @@ import org.bukkit.util.Vector;
 
 public class WOP_IRON_SWORD
 {
-    public static void onUse(PlayerInteractEvent e, MonsterMadness monsterMadness, NSA nsa)
+    public static void onUse(PlayerInteractEvent e)
     {
         Player player = e.getPlayer();
         String customName = player.getCustomName();
         Block blockClicked = e.getClickedBlock();
-        Action action = e.getAction();
         // If the player left clicks
         ItemStack itemStackInMainHand = e.getItem();
         ItemMeta itemMeta = itemStackInMainHand.getItemMeta();
@@ -28,44 +27,46 @@ public class WOP_IRON_SWORD
         {
             //============================== Interact: Cool-Down/Durability =======================================
             long currentTime = System.currentTimeMillis();
-            LivingEntityData livingEntityData = nsa.livingEntityBank.getLivingEntityData(player.getUniqueId());
+            LivingEntityData livingEntityData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
             if ((currentTime - livingEntityData.getLastAttackTime()) > livingEntityData.getAttackDelay() && //if player's cool-down is finished
                     (currentTime - livingEntityData.getLastWOPRegenTime()) > 100)                           //and 100ms since last WOP regen (to prevent making too many)
             {
                 livingEntityData.setLastAttackTime(currentTime);                                           //then reset player cool-down period
-
-                Damageable damageable = (Damageable) itemMeta;
-                int fragilityLevel = WOP.getPowerLevel(customName, 28); //PowerID:28 = FRAGILE
-                int damageMultiplier = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
-                int maxDamage = WOP.getMaxDurability(customName);
-                int currentDamage = damageable.getDamage();
-                int newDamage = currentDamage + (1 + damageMultiplier);
-
-                if (newDamage > maxDamage)//if durability is too low
+                //handle infinity powerUp
+                if(WOP.getPowerLevel(customName, 0) < 1)
                 {
-                    e.setCancelled(true);//cancel the event
-                    livingEntityData.setOnInteractCanceled(true);
-                    return;
-                } else //otherwise, remove durability (ammo)
-                {
-                    System.out.println("Damage: " + currentDamage + " -> " + newDamage);
-                    damageable.setDamage(newDamage);
-                    itemStackInMainHand.setItemMeta(itemMeta);
+                    Damageable damageable = (Damageable) itemMeta;
+                    int fragilityLevel = WOP.getPowerLevel(customName, 28); //PowerID:28 = FRAGILE
+                    int damageMultiplier = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
+                    int maxDamage = WOP.getMaxDurability(customName);
+                    int currentDamage = damageable.getDamage();
+                    int newDamage = currentDamage + (1 + damageMultiplier);
 
-                    nsa.refreshChargesArtifact(player);
-                    //===================================== Interact: Regen ===========================================
-                    //only start a new regen ammo recursion if current damage is 0 and item has appropriate lore
-                    if (currentDamage == 0 && WOP.getPowerLevel(customName, 1) != 0) //PowerID:3 = REGEN
+                    if (newDamage > maxDamage)//if durability is too low
                     {
-                        System.out.println("Regen Timer Started From Player Interact.");
-                        new Regen_Ammo(nsa, itemStackInMainHand, livingEntityData).runTaskLater(monsterMadness, 20);
+                        e.setCancelled(true);//cancel the event
+                        return;
+                    } else //otherwise, remove durability (ammo)
+                    {
+                        System.out.println("Damage: " + currentDamage + " -> " + newDamage);
+                        damageable.setDamage(newDamage);
+                        itemStackInMainHand.setItemMeta(itemMeta);
+
+                        MonsterMadness.NSA.refreshChargesArtifact(player);
+                        //===================================== Interact: Regen ===========================================
+                        //only start a new regen ammo recursion if current damage is 0 and item has appropriate power
+                        if (currentDamage == 0 && WOP.getPowerLevel(customName, 1) != 0) //PowerID:3 = REGEN
+                        {
+                            System.out.println("Regen Timer Started From Player Interact.");
+                            new Regen_Ammo(itemStackInMainHand, livingEntityData).runTaskLater(MonsterMadness.PLUGIN, 20);
+                        }
                     }
                 }
                 //======= Regen ====
 
                 //==================================== Interact: Jamming ==========================================
                 //roll for power, will either be jamming or volatile, not both
-                int roll = nsa.random.nextInt(5);
+                int roll = MonsterMadness.RANDOM.nextInt(5);
                 //Handle Jamming power
                 if (WOP.getPowerLevel(customName, 0) * -1 > roll)//PowerID:0 = JAMMING
                 {
@@ -83,7 +84,6 @@ public class WOP_IRON_SWORD
                     location = player.getLocation(); //explode on player
                 else if (boomLevel > roll)
                     location = blockClicked.getLocation(); //explode where the player is looking
-                //note this only handles melee atm
                 if (location != null)
                 {
                     Fireball fireball = (Fireball) player.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
@@ -101,7 +101,7 @@ public class WOP_IRON_SWORD
         }
     }
 
-    public static void onHit(EntityDamageByEntityEvent e, MonsterMadness monsterMadness, NSA nsa)
+    public static void onHit(EntityDamageByEntityEvent e)
     {
         Entity attacker = e.getDamager();
         String attackerCustomName = attacker.getCustomName();
@@ -129,7 +129,7 @@ public class WOP_IRON_SWORD
         if(attacker instanceof Player)
         {
             long currentTime = System.currentTimeMillis();
-            LivingEntityData attackerLED = nsa.livingEntityBank.getLivingEntityData(attacker.getUniqueId());
+            LivingEntityData attackerLED = LivingEntityBank.getLivingEntityData(attacker.getUniqueId());
             Player player = (Player)attacker;
             ItemStack mainHandItemStack = player.getInventory().getItemInMainHand();
             ItemMeta itemMeta = mainHandItemStack.getItemMeta();
@@ -139,29 +139,32 @@ public class WOP_IRON_SWORD
             {
                 attackerLED.setLastAttackTime(currentTime);//then reset player cool-down period
 
-                Damageable damageable = (Damageable) itemMeta;
-                int fragilityLevel = WOP.getPowerLevel(attackerCustomName, 28); //PowerID:28 = FRAGILE
-                int damageMultiplier = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
-                int maxDamage = WOP.getMaxDurability(attackerCustomName);
-                int currentDamage = damageable.getDamage();
-                int newDamage = currentDamage + (1 + damageMultiplier);
+                if(WOP.getPowerLevel(attackerCustomName, 0) < 1)
+                {
+                    Damageable damageable = (Damageable) itemMeta;
+                    int fragilityLevel = WOP.getPowerLevel(attackerCustomName, 28); //PowerID:28 = FRAGILE
+                    int damageMultiplier = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
+                    int maxDamage = WOP.getMaxDurability(attackerCustomName);
+                    int currentDamage = damageable.getDamage();
+                    int newDamage = currentDamage + (1 + damageMultiplier);
 
-                if (newDamage > maxDamage)//if durability is too low
-                {
-                    e.setCancelled(true);//cancel the event
-                    return;
-                } else //otherwise, remove durability (ammo)
-                {
-                    System.out.println("Damage: " + currentDamage + " -> " + newDamage);
-                    damageable.setDamage(newDamage);
-                    mainHandItemStack.setItemMeta(itemMeta);
-                    nsa.refreshChargesArtifact(player);
-                    //===================================== Interact: Regen ===========================================
-                    //only start a new regen ammo recursion if current damage is 0 and item has appropriate lore
-                    if (currentDamage == 0 && WOP.getPowerLevel(attackerCustomName, 1) != 0) //PowerID:3 = REGEN
+                    if (newDamage > maxDamage)//if durability is too low
                     {
-                        System.out.println("Regen Timer Started From Player Interact.");
-                        new Regen_Ammo(nsa, mainHandItemStack, attackerLED).runTaskLater(monsterMadness, 20);
+                        e.setCancelled(true);//cancel the event
+                        return;
+                    } else //otherwise, remove durability (ammo)
+                    {
+                        System.out.println("Damage: " + currentDamage + " -> " + newDamage);
+                        damageable.setDamage(newDamage);
+                        mainHandItemStack.setItemMeta(itemMeta);
+                        MonsterMadness.NSA.refreshChargesArtifact(player);
+                        //===================================== Interact: Regen ===========================================
+                        //only start a new regen ammo recursion if current damage is 0 and item has appropriate lore
+                        if (currentDamage == 0 && WOP.getPowerLevel(attackerCustomName, 1) != 0) //PowerID:3 = REGEN
+                        {
+                            System.out.println("Regen Timer Started From Player Interact.");
+                            new Regen_Ammo(mainHandItemStack, attackerLED).runTaskLater(MonsterMadness.PLUGIN, 20);
+                        }
                     }
                 }
             }
@@ -169,21 +172,30 @@ public class WOP_IRON_SWORD
         //================================= Damage Application Block ======================================
         int attackerLevel;
         int defenderLevel;
-        if (attacker instanceof Player)
-        {
-            LivingEntityData attackerLED = nsa.livingEntityBank.getLivingEntityData(attacker.getUniqueId());
+        LivingEntityData attackerLED = null;
+        LivingEntityData defenderLED = null;
+        if (attacker instanceof Player) //attacker is player.
+        {   //attacker level is in led
+            attackerLED = LivingEntityBank.getLivingEntityData(attacker.getUniqueId());
             attackerLevel = attackerLED.getLevel();
-            if (defenderCustomName.contains("WOP"))
-                defenderLevel = (int) monsterMadness.wopMonsterLevel;
-            else
-                defenderLevel = nsa.livingEntityBank.getLivingEntityData(attacker.getUniqueId()).getLevel();
-        } else
+            if (defenderCustomName.contains("WOP")) //defender is wop mob
+            {   //monster level is that of the plugin level, and the mob has LED
+                defenderLevel = (int) MonsterMadness.MONSTER_LEVEL_AVERAGE;
+                defenderLED = LivingEntityBank.getLivingEntityData(defender.getUniqueId());
+            }
+            else  //defender is not a wop generated mob
+            {   //defender level is same a player (makes the lvl dam mod 1)
+                defenderLevel = attackerLED.getLevel();
+                //may have data (in the case of prev being hit with timer effect). may not and return null if so
+                defenderLED = LivingEntityBank.getLivingEntityData(defender.getUniqueId());
+            }
+        } else //attacker is a mob with an wop iron sword, defender is a player. either or both attacker and defender have a wop
         {
-            defenderLevel = nsa.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
-            if (attackerCustomName.contains("WOP"))
-                attackerLevel = (int) monsterMadness.wopMonsterLevel;
-            else
-                attackerLevel = nsa.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getLevel();
+            //defender is a player
+            defenderLED = LivingEntityBank.getLivingEntityData(defender.getUniqueId());
+            defenderLevel = defenderLED.getLevel();
+            attackerLevel = (int) MonsterMadness.MONSTER_LEVEL_AVERAGE;
+
         }
 
         double levelRatioModifier = 1 + (attackerLevel - defenderLevel) * 0.01;
@@ -197,17 +209,19 @@ public class WOP_IRON_SWORD
         int wopBaseDamage = 0;
         if (attackerCustomName.contains("WOP") && defenderCustomName.contains("WOP"))
         {
-            int attackerBase = nsa.livingEntityBank.getLivingEntityData(attacker.getUniqueId()).getBaseATK();
-            int defenderBase = nsa.livingEntityBank.getLivingEntityData(defender.getUniqueId()).getBaseDEF();
+            int attackerBase = LivingEntityBank.getLivingEntityData(attacker.getUniqueId()).getBaseATK();
+            int defenderBase = LivingEntityBank.getLivingEntityData(defender.getUniqueId()).getBaseDEF();
             wopBaseDamage = attackerBase - defenderBase;
         }
 
         double damage = wopBaseDamage + e.getDamage() * levelRatioModifier * protectionModifier * damageIncreaseModifier;
         System.out.println(attacker.getName() + " dealt " + damage + " damage to " + defender.getName());
-
-
+        //================================= Regen Timer Starter ======================================
+        LivingEntity livingEntity = (LivingEntity)defender;
+        if(WOP.isWOP(defenderCustomName) && WOP.getPowerLevel(defenderCustomName, 3) > 0 && livingEntity.getHealth() - e.getFinalDamage() < livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue())
+            new Regen_Health(livingEntity).runTaskLater(MonsterMadness.PLUGIN, 20);
         //================================= Entity vs Entity: Boom ======================================
-        int roll = nsa.random.nextInt(5);
+        int roll = MonsterMadness.RANDOM.nextInt(5);
         try
         {
             Location location = null;

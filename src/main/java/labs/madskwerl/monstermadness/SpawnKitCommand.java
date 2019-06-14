@@ -17,13 +17,8 @@ import java.util.Random;
 
 public class SpawnKitCommand implements CommandExecutor
 {
-    private Random random = new Random();
-    private NSA nsa;
 
-    public SpawnKitCommand(NSA nsa)
-    {
-        this.nsa = nsa;
-    }
+    public SpawnKitCommand(){}
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
@@ -67,7 +62,7 @@ public class SpawnKitCommand implements CommandExecutor
                 ItemMeta itemMeta = itemStack.getItemMeta();
                 itemMeta.setLocalizedName("INV_ARTIFACT");
                 itemStack.setItemMeta(itemMeta);
-                this.nsa.livingEntityBank.getLivingEntityData(player.getUniqueId()).setInvArtifact(itemStack);
+                LivingEntityBank.getLivingEntityData(player.getUniqueId()).setInvArtifact(itemStack);
                 //this.nsa.refreshInvArtifact(player); //just commented out b/c unimplemented and wanted to test refreshCharges
             }
 
@@ -76,12 +71,13 @@ public class SpawnKitCommand implements CommandExecutor
                 ItemStack itemStack = new ItemStack(Material.YELLOW_BANNER, 1);
                 ItemMeta itemMeta = itemStack.getItemMeta();
                 itemMeta.setLocalizedName("CHARGES_ARTIFACT");
+                itemMeta.setDisplayName("CHARGES ARTIFACT");
                 ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.GRAY, PatternType.FLOWER));
                 itemStack.setItemMeta(itemMeta);
-                this.nsa.livingEntityBank.getLivingEntityData(player.getUniqueId()).setChargesArtifact(itemStack);
+                LivingEntityBank.getLivingEntityData(player.getUniqueId()).setChargesArtifact(itemStack);
                 player.getInventory().addItem(itemStack);                //that number as the power level
             }
-            new Delayed_BindChargesArtifact(this.nsa, player).runTaskLater(this.nsa.plugin, 1);
+            new Delayed_BindChargesArtifact(player).runTaskLater(MonsterMadness.PLUGIN, 1);
         }
         else
             return false;

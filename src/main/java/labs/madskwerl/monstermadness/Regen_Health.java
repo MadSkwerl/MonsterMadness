@@ -1,22 +1,20 @@
 package labs.madskwerl.monstermadness;
 
-import org.bukkit.entity.Player;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.scheduler.BukkitRunnable;
 
 public class Regen_Health extends BukkitRunnable
 {
-    private NSA nsa;
-    private Player player;
-    public Regen_Health(NSA nsa, Player player)
+    private LivingEntity livingEntity;
+    public Regen_Health(LivingEntity livingEntity)
     {
-        this.nsa = nsa;
-        this.player = player;
+        this.livingEntity = livingEntity;
     }
 
     @Override
     public void run()
     {
-        nsa.regenHealth(player);
+        MonsterMadness.NSA.regenHealth(this.livingEntity);
     }
 
 }

@@ -7,26 +7,26 @@ import java.util.UUID;
 public class LivingEntityBank
 {
    
-     private Map<UUID, LivingEntityData> map = new HashMap<>();
+     private static Map<UUID, LivingEntityData> map = new HashMap<>();
 
-     public void addLivingEntityData(UUID uuid, LivingEntityData livingEntityData)
+     public static void addLivingEntityData(UUID uuid, LivingEntityData livingEntityData)
      {
-         this.map.put(uuid, livingEntityData);
+         LivingEntityBank.map.put(uuid, livingEntityData);
      }
 
-     public void removeLivingEntityData(UUID uuid)
+     public static void removeLivingEntityData(UUID uuid)
      {
-         this.map.remove(uuid);
+         LivingEntityBank.map.remove(uuid);
      }
 
-    public LivingEntityData getLivingEntityData(String uuid)
+    public static LivingEntityData getLivingEntityData(String uuid)
     {
-        return this.map.get(UUID.fromString(uuid));
+        return LivingEntityBank.map.get(UUID.fromString(uuid));
     }
 
-    public LivingEntityData getLivingEntityData(UUID uuid)
+    public static LivingEntityData getLivingEntityData(UUID uuid)
     {
-        return this.map.get(uuid);
+        return LivingEntityBank.map.get(uuid);
     }
 
 

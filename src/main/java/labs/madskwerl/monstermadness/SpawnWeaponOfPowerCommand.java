@@ -13,13 +13,8 @@ import java.util.Random;
 public class SpawnWeaponOfPowerCommand implements CommandExecutor
 {
     public enum WOP_SYNTAX {WOP, ID, VALID, REMOVE}
-    private Random random = new Random();
-    private NSA nsa;
 
-    public SpawnWeaponOfPowerCommand(NSA nsa)
-    {
-        this.nsa = nsa;
-    }
+    public SpawnWeaponOfPowerCommand(){}
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args)
@@ -89,14 +84,14 @@ public class SpawnWeaponOfPowerCommand implements CommandExecutor
                                 WOP.newWOP("IRON_SWORD", itemStack, powerID, i);
                                 player.getInventory().addItem(itemStack);
                             }
-                            nsa.initPlayer(player);
+                            MonsterMadness.NSA.initPlayer(player);
                         }
                         else if (args.length == 2 && args[1].matches("-?\\d+"))//else if 2nd arg is a number
                         {
                             ItemStack itemStack = new ItemStack(Material.IRON_SWORD, 1);
                             WOP.newWOP("IRON_SWORD", itemStack, powerID, Integer.valueOf(args[1]));//give player a new WOP using
                             player.getInventory().addItem(itemStack);                //that number as the power level
-                            nsa.initPlayer(player);
+                            MonsterMadness.NSA.initPlayer(player);
                         }
                         else
                             this.outputSyntax(WOP_SYNTAX.ID, player);//wrong amount of args, or 2nd arg is not a number

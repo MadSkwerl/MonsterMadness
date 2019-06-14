@@ -22,7 +22,8 @@ public class WOP
         itemMeta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
         itemStack.setItemMeta(itemMeta);
 
-        WOP.setPower(itemStack, powerID, (int) Math.ceil(powerLevel / 2.0));
+        powerLevel = powerLevel > 0 ? (int) Math.ceil(powerLevel / 2.0) : (int)Math.floor(powerLevel / 2.0);
+        WOP.setPower(itemStack, powerID, powerLevel);
     }
 
     public static boolean setDisplayName(ItemStack itemStack, int powerID, int powerLevel)
@@ -53,7 +54,7 @@ public class WOP
             String[] powersArray = itemMeta.getLocalizedName().split(":");
             String hexString = Integer.toHexString(powerLevel);
             if(hexString.length() > 2)
-                hexString = hexString.substring(hexString.length() - 2, hexString.length());
+                hexString = hexString.substring(hexString.length() - 2);
             powersArray[powerID + 2] = hexString;
             itemMeta.setLocalizedName(String.join(":", powersArray));
             itemStack.setItemMeta(itemMeta);
