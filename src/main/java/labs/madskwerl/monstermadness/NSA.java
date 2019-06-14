@@ -538,7 +538,7 @@ public class NSA implements Listener
     public void onPlayerToggleSneakEvent(PlayerToggleSneakEvent e)
     {
         Player player = e.getPlayer();
-        LivingEntityData playerData = livingEntityBank.getLivingEntityData(player.getUniqueId());
+        LivingEntityData playerData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
         if(player.isSneaking())
             playerData.swapMainInventory();
         else
