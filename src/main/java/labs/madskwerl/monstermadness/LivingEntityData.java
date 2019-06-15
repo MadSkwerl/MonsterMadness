@@ -1,6 +1,7 @@
 package labs.madskwerl.monstermadness;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 
@@ -21,8 +22,8 @@ public class LivingEntityData
     private UUID uuid;
 
     /* Power Inventory Variables */
-    private ArrayList<ItemStack> powerUps = new ArrayList<>();
-    private ItemStack[] backupInventory, powerInventory = new ItemStack[9];
+    private ArrayList<ItemStack> powerUps;
+    private ItemStack[] backupInventory, powerInventory;
     private int backupCursor, powerCursor;
     private boolean inventoryIsSwapped;
     private int powerIndex;
@@ -32,7 +33,6 @@ public class LivingEntityData
     /* swaps to powerInventory */
     public void swapPowerInventory()
     {
-
         Player player = Bukkit.getPlayer(uuid);
         backupInventory = player.getInventory().getStorageContents();
         backupCursor = player.getInventory().getHeldItemSlot();
@@ -65,9 +65,10 @@ public class LivingEntityData
                 addPowerIndex(7);
                 break;
         }
+
     }
     /* Updates the contents of the powerInventory based around the current powerCursor */
-    private  void updatePowerInventory()
+    private void updatePowerInventory()
     {
         int powerSize = powerUps.size();
         if (powerSize > 0)
@@ -80,6 +81,9 @@ public class LivingEntityData
                 powerInventory[i] = powerUps.get(j);
             }
         }
+        Player player = Bukkit.getPlayer(uuid);
+        player.getInventory().setContents(powerInventory);
+        player.updateInventory();
     }
     /* Changes the current powerIndex by adding the dIndex, result will modulus around the number of power ups */
     /* Finally, updates the powerInventory */
@@ -95,6 +99,26 @@ public class LivingEntityData
     public LivingEntityData(UUID uuid)
     {
         this.uuid = uuid;
+        this.powerUps = new ArrayList<>();
+        this.powerInventory = new ItemStack[9];
+        powerUps.add(new ItemStack(Material.ACACIA_BOAT, 1));
+        powerUps.add(new ItemStack(Material.COMPARATOR, 1));
+        powerUps.add(new ItemStack(Material.DIAMOND_PICKAXE, 1));
+        powerUps.add(new ItemStack(Material.BLACK_BANNER, 1));
+        powerUps.add(new ItemStack(Material.GOLD_ORE, 10));
+        powerUps.add(new ItemStack(Material.LIGHT_BLUE_BED, 1));
+        powerUps.add(new ItemStack(Material.CHEST, 2));
+        powerUps.add(new ItemStack(Material.LIGHT_GRAY_TERRACOTTA, 5));
+        powerUps.add(new ItemStack(Material.FLINT, 11));
+        powerUps.add(new ItemStack(Material.COAL_ORE, 3));
+        powerUps.add(new ItemStack(Material.DARK_OAK_BOAT, 1));
+        powerUps.add(new ItemStack(Material.HEART_OF_THE_SEA, 1));
+        powerUps.add(new ItemStack(Material.BIRCH_SLAB, 1));
+        powerUps.add(new ItemStack(Material.HOPPER, 1));
+        powerUps.add(new ItemStack(Material.LAPIS_ORE, 13));
+        powerUps.add(new ItemStack(Material.LIGHT_GRAY_CARPET, 2));
+        powerUps.add(new ItemStack(Material.COD_BUCKET, 5));
+        powerUps.add(new ItemStack(Material.BRICK, 17));
     }
 
     public int getAttackDelay()
