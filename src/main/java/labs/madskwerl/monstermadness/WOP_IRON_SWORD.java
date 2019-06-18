@@ -77,6 +77,9 @@ public class WOP_IRON_SWORD
                 //======== End Jamming ====
                 if (blockClicked == null)
                     return;
+
+
+
                 //================================= Interact: Volatile/Boom =======================================
                 Location location = null;
                 int boomLevel = WOP.getPowerLevel(customName, 8);
@@ -126,16 +129,15 @@ public class WOP_IRON_SWORD
         }
 
         //================================= Ammo Application Block ======================================
+        long currentTime = System.currentTimeMillis();
         if(attacker instanceof Player)
         {
-            long currentTime = System.currentTimeMillis();
             LivingEntityData attackerLED = LivingEntityBank.getLivingEntityData(attacker.getUniqueId());
             Player player = (Player)attacker;
             ItemStack mainHandItemStack = player.getInventory().getItemInMainHand();
             ItemMeta itemMeta = mainHandItemStack.getItemMeta();
-
-            if ((currentTime - attackerLED.getLastAttackTime()) > attackerLED.getAttackDelay() &&               //if player's cool-down is finished
-                    (currentTime - attackerLED.getLastWOPRegenTime()) > 100)                                    //and 100ms since last WOP regen (to prevent making too many)
+            if ((currentTime - attackerLED.getLastAttackTime()) > attackerLED.getAttackDelay() &&            //if player's cool-down is finished
+                (currentTime - attackerLED.getLastWOPRegenTime()) > 100)                                    //and 100ms since last WOP regen (to prevent making too many)                                    //and 100ms since last WOP regen (to prevent making too many)
             {
                 attackerLED.setLastAttackTime(currentTime);//then reset player cool-down period
 
@@ -216,10 +218,46 @@ public class WOP_IRON_SWORD
 
         double damage = wopBaseDamage + e.getDamage() * levelRatioModifier * protectionModifier * damageIncreaseModifier;
         System.out.println(attacker.getName() + " dealt " + damage + " damage to " + defender.getName());
+
+        //handle vamp/charity, allows overheal for now...
+        int vampLevel = WOP.getPowerLevel(attackerCustomName, 2);
+        if (vampLevel > 0)  //vamp
+        {
+            LivingEntity livingEntity = (LivingEntity) attacker;
+            livingEntity.setHealth(livingEntity.getHealth() + vampLevel * .1 * damage);
+        }
+        else if(vampLevel < 0) //charity
+        {
+            LivingEntity livingEntityAttacker = (LivingEntity) attacker;
+            double newHealth = livingEntityAttacker.getHealth() + vampLevel * .1 * damage;
+            if(newHealth < 0)
+                newHealth = 0;
+            livingEntityAttacker.setHealth(newHealth);
+            LivingEntity livingEntityDefender = (LivingEntity) defender;
+            livingEntityDefender.setHealth(livingEntityDefender.getHealth() + vampLevel * .1 * damage);
+        }
+
         //================================= Regen Timer Starter ======================================
         LivingEntity livingEntity = (LivingEntity)defender;
         if(WOP.isWOP(defenderCustomName) && WOP.getPowerLevel(defenderCustomName, 3) > 0 && livingEntity.getHealth() - e.getFinalDamage() < livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue())
             new Regen_Health(livingEntity).runTaskLater(MonsterMadness.PLUGIN, 20);
+
+        int poisonLevel = WOP.getPowerLevel(attackerCustomName, 6); //PowerID:6 = POISON
+        if( poisonLevel > 0 )
+        {
+            if(defenderLED == null)
+            {
+                defenderLED = new  LivingEntityData(defender.getUniqueId());
+                LivingEntityBank.addLivingEntityData(defender.getUniqueId(), defenderLED);
+            }
+            defenderLED.setPoisonTime(poisonLevel, currentTime + 5000);
+            if(!defenderLED.isPoisoned())
+            {
+                defenderLED.setPoisoned(true);
+                new PoisonTimer(defenderLED).runTaskLater(MonsterMadness.PLUGIN, 10);
+            }
+        }
+
         //================================= Entity vs Entity: Boom ======================================
         int roll = MonsterMadness.RANDOM.nextInt(5);
         try

@@ -533,4 +533,31 @@ public class NSA implements Listener
                 e.setCancelled(true);
         }catch (Exception err){}
     }
+
+    public void applyPoison(LivingEntityData led)
+    {
+        long currentTime = System.currentTimeMillis();
+        for(int i = 5; i > -1; i--)
+        {
+            if(i == 0)
+                led.setPoisoned(false);
+            else if(led.getPoisonTime(i) > currentTime)
+            {
+                LivingEntity entity =(LivingEntity) MonsterMadness.PLUGIN.getServer().getEntity(led.getUUID());
+                double newHealth = entity.getHealth() - i;
+                if(newHealth < 0)
+                {
+                    newHealth = 0;
+                    led.setPoisoned(false);
+                    //onDeath handles removing led
+                }
+                entity.setHealth(newHealth);
+                System.out.println(entity + "Poisoned-Level: " + i + ", HP: " + entity.getHealth());
+                break;
+            }
+        }
+
+        if(led.isPoisoned())
+            new PoisonTimer(led).runTaskLater(MonsterMadness.PLUGIN, 10);
+    }
 }

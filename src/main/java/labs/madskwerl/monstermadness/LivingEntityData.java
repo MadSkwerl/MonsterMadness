@@ -10,6 +10,8 @@ public class LivingEntityData
     private long lastAttackTime = 0;
     private long lastWOPRegenTime = 0;
     private boolean isRegenHealth = false;
+    private boolean isPoisoned = false;
+    private long[] poisonTime = new long[6]; // holds timer values for poison effect
     private int level = 1;
     private int baseATK = 10;
     private int baseDEF = 10;
@@ -51,7 +53,6 @@ public class LivingEntityData
     {
         this.lastWOPRegenTime = lastWOPRegenTime;
     }
-
 
     public boolean isRegenHealth()
     {
@@ -121,5 +122,25 @@ public class LivingEntityData
     public void setUUID(UUID uuid)
     {
         this.uuid = uuid;
+    }
+
+    public void setPoisoned(boolean poisoned)
+    {
+        this.isPoisoned = poisoned;
+    }
+
+    public boolean isPoisoned()
+    {
+        return this.isPoisoned;
+    }
+
+    public void setPoisonTime(int poisonLevel, long time)
+    {
+        this.poisonTime[poisonLevel] = time;
+    }
+
+    public long getPoisonTime(int poisonLevel)
+    {
+        return this.poisonTime[poisonLevel];
     }
 }

@@ -108,7 +108,7 @@ public class Powers
             case "HALTING":     //WH  - chance to be stunned when hit
             case "CONFOUNDING": //OH  - chance (smaller that other power ups) to stun on hit
                 return 17;
-            case "DAZZELMENT":  //WH  - increases time player is stunned
+            case "DAZZLEMENT":  //WH  - increases time player is stunned
             case "UNLEASHED":   //WH  - level 0 = 100% stun chance lvl1 = 50% lvl2 = 0% (immune). only applies to mobs that hit with stunning
                 return 18;
             case "TIRING":      //OE - Slows atk speed  (player generic atk speed nbt tag)
@@ -161,12 +161,16 @@ public class Powers
                 return powerLevel > 0 ? "INFINTE" : "JAMMING";
             case 1:
                 return powerLevel > 0 ? "AMMO REGEN" : "ROBBING";
+            case 2:
+                return powerLevel > 0 ? "VAMP" : "CHARITY";
             case 3:
                 return powerLevel > 0 ? "YOUTH" : "DYING";
             case 4:
                 return powerLevel > 0 ? "DAMAGE" : "FEEBLE";
             case 5:
                 return powerLevel > 0 ? "PROTECTION" : "WEAKNESS";
+            case 6:
+                return powerLevel > 0 ? "TOXIC" : "TAINTED";
             case 8:
                 return powerLevel > 0 ? "BOOM" : "VOLATILE";
             case 9:
@@ -191,8 +195,12 @@ public class Powers
                 return powerLevel > 0 ? "INFINITE " : "";
             case 1:
                 return powerLevel > 0 ? "" : "ROBBING ";
+            case 2:
+                return powerLevel > 0 ? "VAMPIRIC " : "";
             case 4:
                 return powerLevel > 0 ? "" : "FEEBLE ";
+            case 6:
+                return powerLevel > 0 ? "TOXIC " : "TAINTED ";
             case 8:
                 return powerLevel > 0 ? "" : "VOLATILE ";
             case 9:
@@ -210,27 +218,29 @@ public class Powers
             return "";
 
         switch(powerID)
-            {
-                case -1:
-                    return powerLevel > 0 ? " OF POWER" : "";
-                case 0:
-                    return powerLevel > 0 ? "" : " OF JAMMING";
-                case 1:
-                    return powerLevel > 0 ? " OF REGEN" : "";
-                case 3:
-                    return powerLevel > 0 ? " OF YOUTH" : " OF DYING";
-                case 4:
-                    return powerLevel > 0 ? " OF DAMAGE" : "";
-                case 5:
-                    return powerLevel > 0 ? " OF PROTECTION" : " OF WEAKNESS";
-                case 8:
-                    return powerLevel > 0 ? " OF BOOM" : "";
-                case 9:
-                    return powerLevel > 0 ? "" : " OF CRUMBLING";
-                case 12:
-                    return powerLevel > 0 ? "" : " OF THE TURTLE";
-            }
-            return "";
+        {
+            case -1:
+                return powerLevel > 0 ? " OF POWER" : "";
+            case 0:
+                return powerLevel > 0 ? "" : " OF JAMMING";
+            case 1:
+                return powerLevel > 0 ? " OF REGEN" : "";
+            case 2:
+                return powerLevel > 0 ? "" : " OF CHARITY";
+            case 3:
+                return powerLevel > 0 ? " OF YOUTH" : " OF DYING";
+            case 4:
+                return powerLevel > 0 ? " OF DAMAGE" : "";
+            case 5:
+                return powerLevel > 0 ? " OF PROTECTION" : " OF WEAKNESS";
+            case 8:
+                return powerLevel > 0 ? " OF BOOM" : "";
+            case 9:
+                return powerLevel > 0 ? "" : " OF CRUMBLING";
+            case 12:
+                return powerLevel > 0 ? "" : " OF THE TURTLE";
+        }
+        return "";
     }
 
     static int getBaseMagnitude(int powerID)
