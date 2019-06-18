@@ -14,6 +14,7 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.*;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -28,10 +29,21 @@ public class NSA implements Listener
     @EventHandler
     public void onPlayerInteract(PlayerInteractEvent e)
     {
+        //First check if the player is sneaking
+        Player player = e.getPlayer();
+        if(player.isSneaking())
+        {
+            int heldItemSlot = player.getInventory().getHeldItemSlot();
+            if(heldItemSlot == 0)
+                LivingEntityBank.getLivingEntityData(player.getUniqueId()).scrollPowerInventory(LivingEntityData.Scroll.LEFT);
+            else if(heldItemSlot == 8)
+                LivingEntityBank.getLivingEntityData(player.getUniqueId()).scrollPowerInventory(LivingEntityData.Scroll.RIGHT);
+            e.setCancelled(true);
+            return;
+        }
         //Calls onUse for the specific wop
-
         Action action = e.getAction();
-        String customName = e.getPlayer().getCustomName();
+        String customName = player.getCustomName();
         if (customName == null)
             customName = "";
         if (customName.contains("WOP") && (action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)))
@@ -559,5 +571,16 @@ public class NSA implements Listener
 
         if(led.isPoisoned())
             new PoisonTimer(led).runTaskLater(MonsterMadness.PLUGIN, 10);
+    }
+    
+    @EventHandler
+    public void onPlayerToggleSneakEvent(PlayerToggleSneakEvent e)
+    {
+        Player player = e.getPlayer();
+        LivingEntityData playerData = LivingEntityBank.getLivingEntityData(player.getUniqueId());
+        if(player.isSneaking())
+            playerData.swapMainInventory();
+        else
+            playerData.swapPowerInventory();
     }
 }
