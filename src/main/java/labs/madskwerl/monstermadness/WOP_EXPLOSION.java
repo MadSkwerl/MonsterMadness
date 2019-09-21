@@ -13,7 +13,7 @@ public class WOP_EXPLOSION
         //locate attacker from source
         Entity source = e.getDamager();
         String sourceCustomName = source.getCustomName();
-        if(sourceCustomName==null)
+        if(sourceCustomName == null)
             sourceCustomName = "";
 
         Entity attacker = null;

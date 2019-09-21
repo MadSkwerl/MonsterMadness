@@ -1,0 +1,9 @@
+09/20/2019 JES
+Created Change Log
+Canceled HOTBAR_MOVE_AND_READD and HOTBAR_SWAP Events. To avoid de-stacking the charges artifact during these events
+Also removed cleanChargesArtifact method in nsa and it's related delay call object, which was called when hotbar swapping
+Removed Inventory Artifact. With future inv swapping mechanics it will not be necessary
+Implemented respawning charges artifact in inv on death via player death player respawn and a few changes to player led
+
+09/21/19 JES
+Updated implemented comments on powers up to 12.

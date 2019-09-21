@@ -142,6 +142,18 @@ public class WOP
         } catch (Exception e){return "";}
     }
 
+    public static int[] getPowersArray(String customName)
+    {
+        String[] stringPowersArray = customName.split(":");
+        int[] intPowersArray = new int[Powers.NumberOfPowers];
+        if(stringPowersArray.length > 2)
+        {
+            for (int i = 2; i < Powers.NumberOfPowers + 2; i++)
+                intPowersArray[i - 2] = (byte) Integer.parseInt(stringPowersArray[i], 16);
+        }
+        return intPowersArray;
+    }
+
     public static boolean isWOP(ItemStack itemStack)
     {
         try

@@ -128,6 +128,10 @@ public class WOP_IRON_SWORD
             return;
         }
 
+        int[] defendersPowersArray = WOP.getPowersArray(defenderCustomName);
+        int[] attackersPowersArray = WOP.getPowersArray(attackerCustomName);
+
+
         //================================= Ammo Application Block ======================================
         long currentTime = System.currentTimeMillis();
         if(attacker instanceof Player)
@@ -141,10 +145,10 @@ public class WOP_IRON_SWORD
             {
                 attackerLED.setLastAttackTime(currentTime);//then reset player cool-down period
 
-                if(WOP.getPowerLevel(attackerCustomName, 0) < 1)
+                if(attackersPowersArray[0] < 1)
                 {
                     Damageable damageable = (Damageable) itemMeta;
-                    int fragilityLevel = WOP.getPowerLevel(attackerCustomName, 28); //PowerID:28 = FRAGILE
+                    int fragilityLevel = attackersPowersArray[28]; //PowerID:28 = FRAGILE
                     int damageMultiplier = fragilityLevel < 0 ? fragilityLevel * -1 : 0;
                     int maxDamage = WOP.getMaxDurability(attackerCustomName);
                     int currentDamage = damageable.getDamage();
@@ -162,7 +166,7 @@ public class WOP_IRON_SWORD
                         MonsterMadness.NSA.refreshChargesArtifact(player);
                         //===================================== Interact: Regen ===========================================
                         //only start a new regen ammo recursion if current damage is 0 and item has appropriate lore
-                        if (currentDamage == 0 && WOP.getPowerLevel(attackerCustomName, 1) != 0) //PowerID:3 = REGEN
+                        if (currentDamage == 0 && attackersPowersArray[1] != 0) //PowerID:3 = REGEN
                         {
                             System.out.println("Regen Timer Started From Player Interact.");
                             new Regen_Ammo(mainHandItemStack, attackerLED).runTaskLater(MonsterMadness.PLUGIN, 20);
@@ -202,10 +206,10 @@ public class WOP_IRON_SWORD
 
         double levelRatioModifier = 1 + (attackerLevel - defenderLevel) * 0.01;
 
-        int protectionLevel = !defenderCustomName.contains("WOP") ? 0 : WOP.getPowerLevel(defenderCustomName, 5); //PowerID:5 = PROTECTION/WEAKNESS
+        int protectionLevel = !defenderCustomName.contains("WOP") ? 0 : defendersPowersArray[5]; //PowerID:5 = PROTECTION/WEAKNESS
         double protectionModifier = 1 - protectionLevel * .1;
 
-        int damageLevel = !attackerCustomName.contains("WOP") ? 0 : WOP.getPowerLevel(attackerCustomName, 4); //PowerID:9 = BLAST PRUF/CRUMBLE
+        int damageLevel = !attackerCustomName.contains("WOP") ? 0 : attackersPowersArray[4]; //PowerID:4 = Damage/Feeble
         double damageIncreaseModifier = 1 + damageLevel * 0.1;
 
         int wopBaseDamage = 0;
@@ -220,7 +224,7 @@ public class WOP_IRON_SWORD
         System.out.println(attacker.getName() + " dealt " + damage + " damage to " + defender.getName());
 
         //handle vamp/charity, allows overheal for now...
-        int vampLevel = WOP.getPowerLevel(attackerCustomName, 2);
+        int vampLevel = attackersPowersArray[2];
         if (vampLevel > 0)  //vamp
         {
             LivingEntity livingEntity = (LivingEntity) attacker;
@@ -239,10 +243,10 @@ public class WOP_IRON_SWORD
 
         //================================= Regen Timer Starter ======================================
         LivingEntity livingEntity = (LivingEntity)defender;
-        if(WOP.isWOP(defenderCustomName) && WOP.getPowerLevel(defenderCustomName, 3) > 0 && livingEntity.getHealth() - e.getFinalDamage() < livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue())
+        if(WOP.isWOP(defenderCustomName) && defendersPowersArray[3] > 0 && livingEntity.getHealth() - e.getFinalDamage() < livingEntity.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue())
             new Regen_Health(livingEntity).runTaskLater(MonsterMadness.PLUGIN, 20);
 
-        int poisonLevel = WOP.getPowerLevel(attackerCustomName, 6); //PowerID:6 = POISON
+        int poisonLevel = attackersPowersArray[6]; //PowerID:6 = POISON
         if( poisonLevel > 0 )
         {
             if(defenderLED == null)
@@ -263,7 +267,7 @@ public class WOP_IRON_SWORD
         try
         {
             Location location = null;
-            if (WOP.getPowerLevel(attackerCustomName, 8) > roll)//PowerID:8 = BOOM
+            if (attackersPowersArray[8] > roll)//PowerID:8 = BOOM
                 location = defender.getLocation(); //explode where the player is looking
             //note this only handles melee atm
             Fireball fireball = (Fireball) attacker.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity

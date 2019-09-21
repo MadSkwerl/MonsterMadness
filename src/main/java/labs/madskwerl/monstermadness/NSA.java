@@ -1,7 +1,10 @@
 package labs.madskwerl.monstermadness;
 
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.block.banner.Pattern;
+import org.bukkit.block.banner.PatternType;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -10,14 +13,19 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityPickupItemEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.List;
 
 public class NSA implements Listener
 {
@@ -456,24 +464,11 @@ public class NSA implements Listener
         player.updateInventory();
     }
 
-    public void cleanChargesArtifact(Player player, int oldSlot, int newSlot)
-    { //called primarily from onInventoryClickEvent when HotBar swap is used
-        ItemStack newSlotItemStack = player.getInventory().getItem(newSlot);
-        try
-        {
-            if(newSlotItemStack.getItemMeta().getLocalizedName().contains("CHARGES_ARTIFACT"))
-            {
-                LivingEntityBank.getLivingEntityData(player.getUniqueId()).setChargesArtifact(newSlotItemStack);
-                this.refreshChargesArtifact(player);
-                player.getInventory().getItem(oldSlot).setAmount(0);
-                player.updateInventory();
-            }
-        }catch(Exception e){}
-    }
 
     @EventHandler
     public void onInventoryClickEvent(InventoryClickEvent e)
     {
+        //Debug Code
         System.out.println("Inventory Click Event");
         System.out.println("Action: " + e.getAction());
         System.out.println("Click: " + e.getClick());
@@ -484,15 +479,19 @@ public class NSA implements Listener
         System.out.println("Hotbar Button: " + e.getHotbarButton());
         System.out.println("Raw Slot: " + e.getRawSlot());
         System.out.println("Slot: " + e.getSlot());
+        //Handles moving of Charges Artifact around inventory
         try
         {
             InventoryAction action = e.getAction();
+            // If it is a pickup event
             if (action.equals(InventoryAction.PICKUP_ALL)  ||
                      action.equals(InventoryAction.PICKUP_HALF) ||
                      action.equals(InventoryAction.PICKUP_SOME) ||
                      action.equals(InventoryAction.PICKUP_ONE)  ||
-                     action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY))
+                     action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY) ||
+                     action.equals(InventoryAction.SWAP_WITH_CURSOR))
             {
+                //Reduce the number of charge to 1 to avoid splitting the stacks
                 if (e.getCurrentItem().getItemMeta().getLocalizedName().contains("CHARGES_ARTIFACT"))
                     e.getCurrentItem().setAmount(1);
                 if(action.equals(InventoryAction.MOVE_TO_OTHER_INVENTORY))
@@ -506,12 +505,7 @@ public class NSA implements Listener
             }
             else if(action.equals(InventoryAction.HOTBAR_MOVE_AND_READD) || action.equals(InventoryAction.HOTBAR_SWAP))
             {
-                ItemStack slotItem = e.getWhoClicked().getInventory().getItem(e.getHotbarButton());
-                if(slotItem.getItemMeta().getLocalizedName().contains("CHARGES_ARTIFACT"))
-                {
-                    slotItem.setAmount(1);
-                    new Delayed_CleanChargesArtifact((Player)e.getWhoClicked(), e.getHotbarButton(), e.getSlot()).runTaskLater(MonsterMadness.PLUGIN, 1);
-                }
+                e.setCancelled(true);
             }
 
         }catch (Exception err){}
@@ -572,7 +566,7 @@ public class NSA implements Listener
         if(led.isPoisoned())
             new PoisonTimer(led).runTaskLater(MonsterMadness.PLUGIN, 10);
     }
-    
+
     @EventHandler
     public void onPlayerToggleSneakEvent(PlayerToggleSneakEvent e)
     {
@@ -582,5 +576,69 @@ public class NSA implements Listener
             playerData.swapMainInventory();
         else
             playerData.swapPowerInventory();
+    }
+
+    //restricts drops
+    @EventHandler
+    public void onPlayerDeathEvent(PlayerDeathEvent e)
+    {
+
+        //TODO: IF THE WOP INV IS THE CURRENT HOW TO HANDLE THIS
+
+        //Scan inv for charges artifact and set he respawn var for it.
+        LivingEntityData playerLED = LivingEntityBank.getLivingEntityData(e.getEntity().getUniqueId());
+        playerLED.setChargesArtifactSlotOnRespawn(-1); //clears charges artifact respawn
+        int i = 0;
+        for (ItemStack itemStack : e.getEntity().getInventory().getContents())
+        {
+            ItemMeta itemMeta = null;
+            if(itemStack != null)
+                itemMeta = itemStack.getItemMeta();
+            if(itemMeta != null)
+            {
+                String localizedName = itemStack.getItemMeta().getLocalizedName();
+                if(localizedName.contains("CHARGES_ARTIFACT"))
+                    playerLED.setChargesArtifactSlotOnRespawn(i); //sets charges artifact respawn to inv number
+            }
+            i++;
+        }
+
+        //Prevent Inventory artifact and charges artifact from dropping
+        List<ItemStack> drops = e.getDrops();
+        for (ItemStack itemStack : drops)
+        {
+            ItemMeta itemMeta = null;
+            if(itemStack != null)
+                itemMeta = itemStack.getItemMeta();
+            if(itemMeta != null)
+            {
+                String localizedName = itemStack.getItemMeta().getLocalizedName();
+                if(localizedName.contains("INV_ARTIFACT") || localizedName.contains("CHARGES_ARTIFACT"))
+                {
+                    drops.remove(itemStack);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlayerRespawnEvent(PlayerRespawnEvent e)
+    {
+        //if player had charges artifact respawn it in their inv
+        Player player = e.getPlayer();
+        LivingEntityData playerLED = LivingEntityBank.getLivingEntityData(player.getUniqueId());
+        int chargesArtifactSlotOnRespawn = playerLED.getChargesArtifactSlotOnRespawn();
+        if (chargesArtifactSlotOnRespawn > -1)
+        {
+            ItemStack itemStack = new ItemStack(Material.YELLOW_BANNER, 1);
+            ItemMeta itemMeta = itemStack.getItemMeta();
+            itemMeta.setLocalizedName("CHARGES_ARTIFACT");
+            itemMeta.setDisplayName("CHARGES ARTIFACT");
+            ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.GRAY, PatternType.FLOWER));
+            itemStack.setItemMeta(itemMeta);
+            LivingEntityBank.getLivingEntityData(player.getUniqueId()).setChargesArtifact(itemStack);
+            player.getInventory().setItem(chargesArtifactSlotOnRespawn, itemStack);
+            new Delayed_BindChargesArtifact(player).runTaskLater(MonsterMadness.PLUGIN, 1);
+        }
     }
 }

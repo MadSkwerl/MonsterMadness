@@ -48,22 +48,9 @@ public class SpawnKitCommand implements CommandExecutor
                 if(itemMeta != null)
                 {
                     String localizedName = itemStack.getItemMeta().getLocalizedName();
-                    if(localizedName.contains("INV_ARTIFACT"))
-                        spawnWOPInvArtifact = false;
-                    else if(localizedName.contains("CHARGES_ARTIFACT"))
+                    if(localizedName.contains("CHARGES_ARTIFACT"))
                         spawnChargesArtifact = false;
                 }
-            }
-
-            //spawn artifacts only if they are not present
-            if(spawnWOPInvArtifact)
-            {
-                ItemStack itemStack = new ItemStack(Material.BLACK_BANNER, 1);
-                ItemMeta itemMeta = itemStack.getItemMeta();
-                itemMeta.setLocalizedName("INV_ARTIFACT");
-                itemStack.setItemMeta(itemMeta);
-                LivingEntityBank.getLivingEntityData(player.getUniqueId()).setInvArtifact(itemStack);
-                //this.nsa.refreshInvArtifact(player); //just commented out b/c unimplemented and wanted to test refreshCharges
             }
 
             if(spawnChargesArtifact)
@@ -75,7 +62,7 @@ public class SpawnKitCommand implements CommandExecutor
                 ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.GRAY, PatternType.FLOWER));
                 itemStack.setItemMeta(itemMeta);
                 LivingEntityBank.getLivingEntityData(player.getUniqueId()).setChargesArtifact(itemStack);
-                player.getInventory().addItem(itemStack);                //that number as the power level
+                player.getInventory().addItem(itemStack);
             }
             new Delayed_BindChargesArtifact(player).runTaskLater(MonsterMadness.PLUGIN, 1);
         }

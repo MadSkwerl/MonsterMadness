@@ -59,23 +59,23 @@ public class Powers
             case "JAMMING":     //OU - chance for damage to not apply on hit     --implemented
             case "INFINITY":    //EW - wop becomes unbreakable                  --implemented
                 return 0;
-            case "ROBBING":     //GT - durability decreases with time
-            case "AMMO REGEN":  //GT - durability increases with time
+            case "ROBBING":     //GT - durability decreases with time            --implemented
+            case "AMMO REGEN":  //GT - durability increases with time           --implemented
                 return 1;
-            case "CHARITY":     //OH - gives life to enemy on hit (percentage most likely)
-            case "VAMP":        //OH - takes life from enemy on hit (percentage?)
+            case "CHARITY":     //OH - gives life to enemy on hit (percentage most likely)    --implemented
+            case "VAMP":        //OH - takes life from enemy on hit (percentage?)             --implemented
                 return 2;
-            case "DYING":       //ET - life drains over time (uses player poison level)
-            case "YOUTH":       //ET - life regens over time
+            case "DYING":       //ET - life drains over time (uses player poison level)       --implemented
+            case "YOUTH":       //ET - life regens over time                                  --implemented
                 return 3;
-            case "FEEBLE":      //OH - reduces damage dealt
-            case "DAMAGE":      //OH - increases damage dealt
+            case "FEEBLE":      //OH - reduces damage dealt                                   --implemented
+            case "DAMAGE":      //OH - increases damage dealt                                 --implemented
                 return 4;
-            case "WEAKNESS":    //WH - increases damage taken
+            case "WEAKNESS":    //WH - increases damage taken                                  --implemented
             case "PROTECTION":  //WH - decreases damage taken
                 return 5;
             case "TAINTED":     //OU - chance to be poisoned for 5 seconds when firing
-            case "TOXIC":       //OH - poisons on hit
+            case "TOXIC":       //OH - poisons on hit                                          --implemented
                 return 6;
             case "DRUGGED":     //WH - chance to be poisoned for 5 seconds when hit
             case "ANTIDOTE":    //WH - protects/reduces being poisoned
@@ -92,8 +92,8 @@ public class Powers
             case "SHACKLE":     //WH - increases slowing of player
             case "OIL":         //WH - reduces slowing of the player
                 return 11;
-            case "TURTLE":      //OE - slows player movement speed
-            case "CAFFEINE":    //OE - speeds player movement speed
+            case "TURTLE":      //OE - slows player movement speed                                                 --implemented
+            case "CAFFEINE":    //OE - speeds player movement speed                                                --implemented
                 return 12;
             case "COMBUSTIBLE": //OU - chance to catch fire when used
             case "HEATED":      //OH - chance to cause fire on hit

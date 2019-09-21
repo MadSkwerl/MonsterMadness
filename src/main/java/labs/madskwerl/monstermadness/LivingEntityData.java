@@ -19,9 +19,11 @@ public class LivingEntityData
     private int level = 1;
     private int baseATK = 10;
     private int baseDEF = 10;
-    private ItemStack invArtifact = null;
     private ItemStack chargesArtifact = null;
     private UUID uuid;
+
+    //holds the slot number the artifact was in on death. -1 If there was none
+    private int chargesArtifactSlotOnRespawn = -1;
 
     /* Power Inventory Variables */
     private ArrayList<ItemStack> powerUps;
@@ -44,6 +46,7 @@ public class LivingEntityData
         player.updateInventory();
         inventoryIsSwapped = false;
     }
+
     /* Swaps to the backed up inventory and cursor */
     public void swapMainInventory()
     {
@@ -55,6 +58,7 @@ public class LivingEntityData
         player.updateInventory();
         inventoryIsSwapped = true;
     }
+
     /* Public method to changing powerInventory: scroll LEFT or RIGHT and updates powerInventory */
     public void scrollPowerInventory(Scroll direction)
     {
@@ -193,16 +197,6 @@ public class LivingEntityData
         this.baseDEF = baseDEF;
     }
 
-    public ItemStack getInvArtifact()
-    {
-        return invArtifact;
-    }
-
-    public void setInvArtifact(ItemStack invArtifact)
-    {
-        this.invArtifact = invArtifact;
-    }
-
     public ItemStack getChargesArtifact()
     {
         return chargesArtifact;
@@ -211,6 +205,17 @@ public class LivingEntityData
     public void setChargesArtifact(ItemStack chargesArtifact)
     {
         this.chargesArtifact = chargesArtifact;
+    }
+
+
+    public int getChargesArtifactSlotOnRespawn()
+    {
+        return chargesArtifactSlotOnRespawn;
+    }
+
+    public void setChargesArtifactSlotOnRespawn(int chargesArtifactSlotOnRespawn)
+    {
+        this.chargesArtifactSlotOnRespawn = chargesArtifactSlotOnRespawn;
     }
 
     public UUID getUUID()
