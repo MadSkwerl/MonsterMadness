@@ -10,5 +10,8 @@ commands:
     description: Get a WOP
     usage: /WOP
   KIT:
-    description: Get Inventory and Charges Artifacts
+    description: Get Charges Artifacts
     usage: /KIT
+  PU:
+    description: Get a Powerup
+    usage: /PU

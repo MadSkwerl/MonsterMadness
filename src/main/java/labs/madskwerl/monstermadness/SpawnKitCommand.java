@@ -13,7 +13,6 @@ import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.Arrays;
-import java.util.Random;
 
 public class SpawnKitCommand implements CommandExecutor
 {
@@ -55,7 +54,7 @@ public class SpawnKitCommand implements CommandExecutor
 
             if(spawnChargesArtifact)
             {
-                ItemStack itemStack = new ItemStack(Material.YELLOW_BANNER, 1);
+                ItemStack itemStack = new ItemStack(Material.BLACK_BANNER, 1);
                 ItemMeta itemMeta = itemStack.getItemMeta();
                 itemMeta.setLocalizedName("CHARGES_ARTIFACT");
                 itemMeta.setDisplayName("CHARGES ARTIFACT");

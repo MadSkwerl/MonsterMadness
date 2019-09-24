@@ -270,7 +270,7 @@ public class WOP_IRON_SWORD
             if (attackersPowersArray[8] > roll)//PowerID:8 = BOOM
                 location = defender.getLocation(); //explode where the player is looking
             //note this only handles melee atm
-            Fireball fireball = (Fireball) attacker.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track entity
+            Fireball fireball = (Fireball) attacker.getWorld().spawnEntity(location, EntityType.FIREBALL); //fireball had the more control and aesthetics than creeper or tnt. Could not use world.createExplosion(), needed way to track damage back to source entity
             fireball.setCustomName(attackerCustomName + ":" + attacker.getUniqueId()); //provides way to track entity
             fireball.setYield(2);
             fireball.setIsIncendiary(false);

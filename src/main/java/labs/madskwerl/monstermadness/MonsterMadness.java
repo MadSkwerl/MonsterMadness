@@ -23,6 +23,7 @@ public final class MonsterMadness extends JavaPlugin
         //register commands
         this.getCommand("WOP").setExecutor(new SpawnWeaponOfPowerCommand());
         this.getCommand("KIT").setExecutor(new SpawnKitCommand());
+        this.getCommand("PU").setExecutor(new SpawnPowerupCommand());
         //populate PlayerBank & WOPVault
         for (Player player : this.getServer().getOnlinePlayers())
         {

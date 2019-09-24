@@ -1,6 +1,8 @@
 package labs.madskwerl.monstermadness;
 
+import org.bukkit.Bukkit;
 import org.bukkit.DyeColor;
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.block.banner.Pattern;
@@ -29,6 +31,8 @@ import java.util.List;
 
 public class NSA implements Listener
 {
+    static boolean MobsDropPowerups = true;
+
     public NSA()
     {
         MonsterMadness.PLUGIN.getServer().getPluginManager().registerEvents(this, MonsterMadness.PLUGIN);
@@ -641,4 +645,15 @@ public class NSA implements Listener
             new Delayed_BindChargesArtifact(player).runTaskLater(MonsterMadness.PLUGIN, 1);
         }
     }
+
+    public void spawnPowerUP(Location location, int powerupID)
+    {
+        location.getWorld().dropItemNaturally(location, Powers.generatePowerUp(powerupID));
+    }
+
+    public void spawnPowerUp(Inventory inventory, int powerupID)
+    {
+        inventory.addItem(Powers.generatePowerUp(powerupID));
+    }
+
 }

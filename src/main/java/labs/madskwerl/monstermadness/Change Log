@@ -7,3 +7,30 @@ Implemented respawning charges artifact in inv on death via player death player 
 
 09/21/19 JES
 Updated implemented comments on powers up to 12.
+Note Error Msg's spotted on death when Cause is charity sword. TODO
+
+09/22/2019 JES
+added generate power up to powers class for implemented powers
+removed getMagnitude() from powers.
+    -power magnitude will either be 1 (positive powerID) or 5 (negative PowerID).
+    -Inf (powerID = 0) has no +5 magnitude, it just gives infinite ammo
+    - powerID = -1 (wop of power id) will never be a power up (meaning -1 is ammo regen +5 in this context)
+
+
+TODO:
+powerup spawner:
+overloaded:
+takes either a location to spawn in world
+or
+an entity to spawn a powerup in inv
+
+add command to utilize spawner
+add command (to turn on/off) and functionality for mobs to spawn with powerups
+
+
+09/23/2019 JES TODO
+implemented spawnPowerupcommand (bugged atm)
+added the toggleMobsDropPowerUp command (unimplemented)
+Added add and remove powerups to led (cleared defualt in)
+Crouching (inv swap is now bugged)
+added overload spawn powerup methods to nsa (not used atm)

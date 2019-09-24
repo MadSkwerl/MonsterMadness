@@ -1,6 +1,12 @@
 package labs.madskwerl.monstermadness;
 
+import org.bukkit.DyeColor;
+import org.bukkit.Material;
+import org.bukkit.block.banner.Pattern;
+import org.bukkit.block.banner.PatternType;
+import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BannerMeta;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 
@@ -158,7 +164,7 @@ public class Powers
             case -1:
                 return powerLevel > 0 ? "POWER" : "BROKEN";
             case 0:
-                return powerLevel > 0 ? "INFINTE" : "JAMMING";
+                return powerLevel > 0 ? "INFINITE" : "JAMMING";
             case 1:
                 return powerLevel > 0 ? "AMMO REGEN" : "ROBBING";
             case 2:
@@ -243,13 +249,196 @@ public class Powers
         return "";
     }
 
-    static int getBaseMagnitude(int powerID)
+    static ItemStack generatePowerUp(int powerID)
     {
-        switch(powerID)
+        //negative powerIDs indicate the +5 variant of the powerup
+        ItemStack itemStack = null;
+        ItemMeta itemMeta;
+        switch(Math.abs(powerID))
         {
-            default:
-                return 1;
+            case 0: //Infinite
+                itemStack = new ItemStack(Material.WHITE_BANNER, 1);
+                itemMeta = itemStack.getItemMeta();
+                itemMeta.setLocalizedName("WEAPON_POWER_UP:" + powerID);
+                itemMeta.setDisplayName("INFINITE POWERUP");
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BROWN, PatternType.STRIPE_BOTTOM));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BROWN, PatternType.STRIPE_TOP));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.YELLOW, PatternType.GRADIENT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.BRICKS));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.CURLY_BORDER));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.SQUARE_BOTTOM_LEFT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.SQUARE_TOP_RIGHT));
+                itemStack.setItemMeta(itemMeta);
+                break;
+            case 1: //Ammo Regen
+                itemStack = new ItemStack(Material.WHITE_BANNER, 1);
+                itemMeta = itemStack.getItemMeta();
+                itemMeta.setLocalizedName("WEAPON_POWER_UP:" + powerID);
+                itemMeta.setDisplayName("AMMO REGEN POWERUP");
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.STRIPE_BOTTOM));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.GRAY, PatternType.STRIPE_TOP));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.GRADIENT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.BRICKS));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.CURLY_BORDER));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.SQUARE_BOTTOM_LEFT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.SQUARE_TOP_RIGHT));
+                itemStack.setItemMeta(itemMeta);
+                break;
+            case 2: //Vamp
+                itemStack = new ItemStack(Material.WHITE_BANNER, 1);
+                itemMeta = itemStack.getItemMeta();
+                itemMeta.setLocalizedName("WEAPON_POWER_UP:" + powerID);
+                itemMeta.setDisplayName("VAMP POWERUP");
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.ORANGE, PatternType.STRIPE_BOTTOM));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.ORANGE, PatternType.STRIPE_TOP));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.GRADIENT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.BRICKS));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.CURLY_BORDER));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.SQUARE_BOTTOM_LEFT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.SQUARE_TOP_RIGHT));
+                if(powerID < 0)
+                {
+                    ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.BORDER));
+                    itemMeta.setDisplayName(itemMeta.getDisplayName() + " +5");
+                }
+                itemStack.setItemMeta(itemMeta);
+                break;
+            case 3: //Health Regen
+                itemStack = new ItemStack(Material.WHITE_BANNER, 1);
+                itemMeta = itemStack.getItemMeta();
+                itemMeta.setLocalizedName("WEAPON_POWER_UP:" + powerID);
+                itemMeta.setDisplayName("HEALTH REGEN POWERUP");
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.LIME, PatternType.STRIPE_BOTTOM));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.YELLOW, PatternType.STRIPE_TOP));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.LIME, PatternType.GRADIENT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.BRICKS));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.CURLY_BORDER));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.SQUARE_BOTTOM_LEFT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.SQUARE_TOP_RIGHT));
+                if(powerID < 0)
+                {
+                    ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.LIME, PatternType.BORDER));
+                    itemMeta.setDisplayName(itemMeta.getDisplayName() + " +5");
+                }
+                itemStack.setItemMeta(itemMeta);
+                break;
+            case 4: //Damage
+                itemStack = new ItemStack(Material.WHITE_BANNER, 1);
+                itemMeta = itemStack.getItemMeta();
+                itemMeta.setLocalizedName("WEAPON_POWER_UP:" + powerID);
+                itemMeta.setDisplayName("DAMAGE POWERUP");
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.STRIPE_BOTTOM));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.STRIPE_TOP));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.PURPLE, PatternType.GRADIENT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.BRICKS));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.CURLY_BORDER));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.SQUARE_BOTTOM_LEFT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.SQUARE_TOP_RIGHT));
+                if(powerID < 0)
+                {
+                    ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.PURPLE, PatternType.BORDER));
+                    itemMeta.setDisplayName(itemMeta.getDisplayName() + " +5");
+                }
+                itemStack.setItemMeta(itemMeta);
+                break;
+            case 5: //Protection
+                itemStack = new ItemStack(Material.WHITE_BANNER, 1);
+                itemMeta = itemStack.getItemMeta();
+                itemMeta.setLocalizedName("WEAPON_POWER_UP:" + powerID);
+                itemMeta.setDisplayName("PROTECTION POWERUP");
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.STRIPE_BOTTOM));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.STRIPE_TOP));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.ORANGE, PatternType.GRADIENT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.YELLOW, PatternType.BRICKS));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.YELLOW, PatternType.CURLY_BORDER));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.YELLOW, PatternType.SQUARE_BOTTOM_LEFT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.YELLOW, PatternType.SQUARE_TOP_RIGHT));
+                if(powerID < 0)
+                {
+                    ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.BORDER));
+                    itemMeta.setDisplayName(itemMeta.getDisplayName() + " +5");
+                }
+                itemStack.setItemMeta(itemMeta);
+                break;
+            case 6: //Toxic
+                itemStack = new ItemStack(Material.WHITE_BANNER, 1);
+                itemMeta = itemStack.getItemMeta();
+                itemMeta.setLocalizedName("WEAPON_POWER_UP:" + powerID);
+                itemMeta.setDisplayName("TOXIC POWERUP");
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.STRIPE_BOTTOM));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.STRIPE_TOP));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.PURPLE, PatternType.GRADIENT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.LIME, PatternType.BRICKS));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.LIME, PatternType.CURLY_BORDER));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.LIME, PatternType.SQUARE_BOTTOM_LEFT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.LIME, PatternType.SQUARE_TOP_RIGHT));
+                itemStack.setItemMeta(itemMeta);
+                if(powerID < 0)
+                {
+                    ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.PURPLE, PatternType.BORDER));
+                    itemMeta.setDisplayName(itemMeta.getDisplayName() + " +5");
+                }
+                itemStack.setItemMeta(itemMeta);
+                break;
+            case 8: //Explosive
+                itemStack = new ItemStack(Material.WHITE_BANNER, 1);
+                itemMeta = itemStack.getItemMeta();
+                itemMeta.setLocalizedName("WEAPON_POWER_UP:" + powerID);
+                itemMeta.setDisplayName("EXPLOSIVE POWERUP");
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.STRIPE_BOTTOM));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.STRIPE_TOP));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.YELLOW, PatternType.GRADIENT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.BRICKS));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.CURLY_BORDER));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.SQUARE_BOTTOM_LEFT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.BLACK, PatternType.SQUARE_TOP_RIGHT));
+                if(powerID < 0)
+                {
+                    ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.YELLOW, PatternType.BORDER));
+                    itemMeta.setDisplayName(itemMeta.getDisplayName() + " +5");
+                }
+                itemStack.setItemMeta(itemMeta);
+                break;
+            case 9: //Explosive Protection
+                itemStack = new ItemStack(Material.WHITE_BANNER, 1);
+                itemMeta = itemStack.getItemMeta();
+                itemMeta.setLocalizedName("WEAPON_POWER_UP:" + powerID);
+                itemMeta.setDisplayName("BLAST PRUF POWERUP");
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.STRIPE_BOTTOM));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.STRIPE_TOP));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.YELLOW, PatternType.GRADIENT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.BRICKS));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.CURLY_BORDER));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.SQUARE_BOTTOM_LEFT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.SQUARE_TOP_RIGHT));
+                if(powerID < 0)
+                {
+                    ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.YELLOW, PatternType.BORDER));
+                    itemMeta.setDisplayName(itemMeta.getDisplayName() + " +5");
+                }
+                itemStack.setItemMeta(itemMeta);
+                break;
+            case 12: //Speed
+                itemStack = new ItemStack(Material.WHITE_BANNER, 1);
+                itemMeta = itemStack.getItemMeta();
+                itemMeta.setLocalizedName("WEAPON_POWER_UP:" + powerID);
+                itemMeta.setDisplayName("BLAST PRUF POWERUP");
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.PURPLE, PatternType.STRIPE_BOTTOM));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.PURPLE, PatternType.STRIPE_TOP));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.GRADIENT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.BRICKS));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.CURLY_BORDER));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.SQUARE_BOTTOM_LEFT));
+                ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.WHITE, PatternType.SQUARE_TOP_RIGHT));
+                if(powerID < 0)
+                {
+                    ((BannerMeta)itemMeta).addPattern(new Pattern(DyeColor.RED, PatternType.BORDER));
+                    itemMeta.setDisplayName(itemMeta.getDisplayName() + " +5");
+                }
+                itemStack.setItemMeta(itemMeta);
+                break;
         }
+        return itemStack;
     }
 
 }
