@@ -25,12 +25,27 @@ or
 an entity to spawn a powerup in inv
 
 add command to utilize spawner
-add command (to turn on/off) and functionality for mobs to spawn with powerups
 
-
-09/23/2019 JES TODO
+09/23/2019 JES
 implemented spawnPowerupcommand (bugged atm)
 added the toggleMobsDropPowerUp command (unimplemented)
-Added add and remove powerups to led (cleared defualt in)
+Added add and remove powerups to led (cleared default power up inventory)
 Crouching (inv swap is now bugged)
 added overload spawn powerup methods to nsa (not used atm)
+
+09/24/2019 JES
+
+FIXED SpawnPowerupCommand bug
+Modified (fixed bugs) in update powerupinv in LED
+TODO: Spotted errors on load/ reload when no wop is in inv
+TODO: implement a method to save powerup inv inbetween reloads
+TODO: Implement throwing away/removing powerups from inv
+TODO: remove banner info from "flavor text" area on powerups, possibly replace it with relavant info
+TODO: restrict picked up powerups to powerup inventory only
+TODO: restrict powerup inv swap to happen only if wop is held and active item
+
+09/25/2019
+Implemented removing powerups from powerup inv
+Removed inv artifact logic from dropitem in nsa
+Implement powerups going into powerup inventory only via PickupItemEvent
+TODO: CROUCHING DESYNCS CHARGES ARTIFACT

@@ -43,11 +43,10 @@ public class SpawnPowerupCommand implements CommandExecutor
                     if(itemStack == null)
                         sender.sendMessage("Invalid powerup id." );
                     else
-                        player.getWorld().dropItemNaturally(player.getLocation(), itemStack);
+                        LivingEntityBank.getLivingEntityData(player.getUniqueId()).addPowerUp(itemStack);
                 }
                 else
                     sender.sendMessage("Usage: /SpawnPowerups [optional: loc/inv] [Powerup ID]" );
-
             }
             else
             {
@@ -57,11 +56,11 @@ public class SpawnPowerupCommand implements CommandExecutor
 
                 if (args[argIndex].matches("-?\\d+"))//else if 2nd arg is a number
                 {
-                    ItemStack itemStack = Powers.generatePowerUp(Integer.parseInt(args[1]));
+                    ItemStack itemStack = Powers.generatePowerUp(Integer.parseInt(args[argIndex]));
                     if(itemStack == null)
                         sender.sendMessage("Invalid powerup id." );
                     else
-                        LivingEntityBank.getLivingEntityData(player.getUniqueId()).addPowerUp(itemStack);
+                        player.getWorld().dropItemNaturally(player.getLocation(), itemStack);
                 }
                 else
                     sender.sendMessage("Usage: /SpawnPowerup [optional: loc/inv] [Powerup ID]" );

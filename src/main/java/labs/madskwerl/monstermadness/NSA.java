@@ -169,14 +169,13 @@ public class NSA implements Listener
                 localizedName = "";
 
             LivingEntityData livingEntityData = LivingEntityBank.getLivingEntityData(e.getPlayer().getUniqueId());
-            if(localizedName.contains("CHARGES_ARTIFACT"))
+
+            if(localizedName.contains("WEAPON_POWER_UP"))
             {
-                e.getItemDrop().remove();
-                livingEntityData.getChargesArtifact().setAmount(0);
-                livingEntityData.setChargesArtifact(null);
+                livingEntityData.removePowerUp(e.getItemDrop().getItemStack());
                 e.getPlayer().updateInventory();
             }
-            else if(localizedName.contains("INV_ARTIFACT"))
+            else if(localizedName.contains("CHARGES_ARTIFACT"))
             {
                 e.getItemDrop().remove();
                 livingEntityData.getChargesArtifact().setAmount(0);
@@ -202,7 +201,13 @@ public class NSA implements Listener
             if (player.getInventory().getItemInMainHand().getType().equals(Material.AIR))
                 player.setCustomName(localizedName);
 
-            if (WOP.isWOP(itemStack))
+            if(localizedName.contains("WEAPON_POWER_UP"))
+            {
+                livingEntityData.addPowerUp(e.getItem().getItemStack());
+                e.getItem().remove();
+                e.setCancelled(true);
+            }
+            else if (WOP.isWOP(itemStack))
             {
                 if (WOP.getPowerLevel(localizedName, 1) != 0) //PowerID:1 = AMMO_REGEN
                 {
@@ -220,7 +225,7 @@ public class NSA implements Listener
 
         } catch (Exception err)
         {
-            System.out.println("PickEventError");
+            System.out.println("PickUpEventError");
         }
     }
 

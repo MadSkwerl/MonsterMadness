@@ -182,7 +182,6 @@ public class LivingEntityData
     /* Swaps to the backed up inventory and cursor */
     public void swapMainInventory()
     {
-
         Player player = Bukkit.getPlayer(uuid);
         powerCursor = player.getInventory().getHeldItemSlot();
         player.getInventory().setContents(backupInventory);
@@ -211,12 +210,11 @@ public class LivingEntityData
         int powerSize = powerUps.size();
         if (powerSize > 0)
         {
-            for (int i = 1; i < 8; i++)
+            int invLimit = Math.min(powerSize, 7); // set the limit to the lower
+            for (int i = 0; i < invLimit; i++)
             {
-                int j = (powerIndex + (i - 4)) % powerSize;
-                if (j < 0)
-                    j += powerSize;
-                powerInventory[i] = powerUps.get(j);
+                int j = (powerIndex + i) % powerSize;
+                powerInventory[i + 1] = powerUps.get(j);
             }
         }
         Player player = Bukkit.getPlayer(uuid);
@@ -265,5 +263,6 @@ public class LivingEntityData
                 return;
             }
         }
+        this.updatePowerInventory();
     }
 }
